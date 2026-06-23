@@ -1,9 +1,8 @@
 import { existsSync, readFileSync } from 'fs';
 import { join, resolve, parse } from 'path';
-import { Groq } from 'groq-sdk';
 import { z } from 'zod';
 import { getComponentPrompt } from '@agent-studio/ai-prompts';
-import type { ComponentResponse, APIErrorResponse } from '@agent-studio/types';
+import type { ComponentResponse } from '@agent-studio/types';
 
 function getEnvValueFromFile(filePath: string, key: string): string | undefined {
   if (!existsSync(filePath)) return undefined;
@@ -52,101 +51,240 @@ function resolveGroqApiKey(): string | undefined {
 }
 
 const GROQ_API_KEY = resolveGroqApiKey();
-const groq = new Groq({
-  apiKey: GROQ_API_KEY || '',
-});
 
 const RequestSchema = z.object({
-  requirement: z.string().min(20).max(1000),
+  requirement: z.string().min(5).max(1000),
   framework: z.enum(['angular', 'react', 'html']),
   componentName: z.string().min(3).max(50),
-  features: z.array(z.string()),
+  features: z.array(z.string()).optional().default([]),
 });
 
 export async function POST(req: Request): Promise<Response> {
+  const encoder = new TextEncoder();
+
+  const sendMessage = (data: Record<string, unknown>) => {
+    return encoder.encode(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
   try {
     if (!GROQ_API_KEY) {
       return Response.json(
         {
+          type: 'error',
           error: 'Groq API key not configured',
+          message: 'Unable to process request: API key not found',
           status: 500,
-        } as APIErrorResponse,
+        },
         { status: 500 }
       );
     }
 
     const body = await req.json();
-    const { requirement, framework, componentName, features } = RequestSchema.parse(body);
+    const parseResult = RequestSchema.safeParse(body);
 
-    // Build scoped prompt
-    const systemPrompt = `You are ComponentForge, a specialized code generation agent.
+    if (!parseResult.success) {
+      const errors = parseResult.error.errors
+        .map((e) => `${e.path.join('.')}: ${e.message}`)
+        .join(', ');
+      return Response.json(
+        {
+          type: 'error',
+          error: 'Invalid request parameters',
+          message: errors,
+          status: 400,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { requirement, framework, componentName, features } = parseResult.data;
+
+    // Return a streaming response
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // Send processing message
+          controller.enqueue(
+            sendMessage({
+              type: 'processing',
+              message: 'Analyzing requirements...',
+              timestamp: new Date().toISOString(),
+            })
+          );
+
+          // Build scoped prompt
+          const systemPrompt = `You are ComponentForge, a specialized code generation agent.
 You generate production-ready, reusable components for web applications.
 Your responses are always valid, syntactically correct code without explanation.
 You understand TypeScript, Angular, React, HTML/CSS/JavaScript deeply.
 Output ONLY code, no markdown, no explanations.`;
 
-    const userPrompt = getComponentPrompt(framework, requirement, componentName, features);
+          const userPrompt = getComponentPrompt(framework, requirement, componentName, features);
 
-    // Call Groq LLM
-    const message = await groq.chat.completions.create({
-      model: 'openai/gpt-oss-120b',
-      max_tokens: 2048,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
+          controller.enqueue(
+            sendMessage({
+              type: 'processing',
+              message: `Generating ${componentName} component for ${framework}...`,
+              timestamp: new Date().toISOString(),
+            })
+          );
+
+          // Call Groq OpenAI-compatible chat endpoint directly. This avoids SDK request parsing issues.
+          let generatedCode = '';
+          const model = 'openai/gpt-oss-120b';
+          const groqRequestBody = {
+            model,
+            max_tokens: 4096,
+            temperature: 0.7,
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt,
+              },
+              {
+                role: 'user',
+                content: userPrompt,
+              },
+            ],
+          };
+
+          const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${GROQ_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(groqRequestBody),
+          });
+
+          const responseText = await groqResponse.text();
+          let responseJson: any;
+
+          try {
+            responseJson = JSON.parse(responseText);
+          } catch {
+            responseJson = null;
+          }
+
+          if (!groqResponse.ok) {
+            const details = responseJson ?? responseText;
+            controller.enqueue(
+              sendMessage({
+                type: 'error',
+                error: 'Groq API error',
+                message: `Groq request failed with status ${groqResponse.status}`,
+                details,
+                status: groqResponse.status,
+              })
+            );
+            controller.close();
+            return;
+          }
+
+          generatedCode = responseJson?.choices?.[0]?.message?.content ?? '';
+
+          if (!generatedCode) {
+            controller.enqueue(
+              sendMessage({
+                type: 'error',
+                error: 'Empty response',
+                message: 'The AI model returned an empty or malformed response. Please try again.',
+                details: responseJson ?? responseText,
+                status: 400,
+              })
+            );
+            controller.close();
+            return;
+          }
+
+          controller.enqueue(
+            sendMessage({
+              type: 'processing',
+              message: 'Parsing generated code into files...',
+              timestamp: new Date().toISOString(),
+            })
+          );
+
+          // Parse response into separate files
+          const files = parseGeneratedCode(generatedCode, framework);
+
+          if (Object.keys(files).length === 0) {
+            controller.enqueue(
+              sendMessage({
+                type: 'error',
+                error: 'Parsing failed',
+                message:
+                  'Failed to parse generated code into files. The response format might be unexpected.',
+                details: { generatedCode: generatedCode.substring(0, 200) },
+                status: 400,
+              })
+            );
+            controller.close();
+            return;
+          }
+
+          controller.enqueue(
+            sendMessage({
+              type: 'processing',
+              message: `Successfully generated ${Object.keys(files).length} files`,
+              timestamp: new Date().toISOString(),
+            })
+          );
+
+          const response: ComponentResponse = {
+            success: true,
+            componentName,
+            framework,
+            files,
+            timestamp: new Date().toISOString(),
+          };
+
+          controller.enqueue(
+            sendMessage({
+              type: 'success',
+              data: response,
+              timestamp: new Date().toISOString(),
+            })
+          );
+
+          controller.close();
+        } catch (error) {
+          console.error('[ComponentForge] Stream Error:', error);
+
+          const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+          controller.enqueue(
+            sendMessage({
+              type: 'error',
+              error: 'Generation failed',
+              message: errorMessage,
+              status: 500,
+            })
+          );
+          controller.close();
+        }
+      },
     });
 
-    const generatedCode = message.choices?.[0]?.message?.content ?? '';
-
-    if (!generatedCode) {
-      return Response.json(
-        {
-          error: 'Failed to generate component code',
-          status: 400,
-        } as APIErrorResponse,
-        { status: 400 }
-      );
-    }
-
-    // Parse response into separate files
-    const files = parseGeneratedCode(generatedCode, framework);
-
-    if (Object.keys(files).length === 0) {
-      return Response.json(
-        {
-          error: 'Failed to parse generated code into files',
-          status: 400,
-        } as APIErrorResponse,
-        { status: 400 }
-      );
-    }
-
-    const response: ComponentResponse = {
-      success: true,
-      componentName,
-      framework,
-      files,
-      timestamp: new Date().toISOString(),
-    };
-
-    return Response.json(response);
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   } catch (error) {
     console.error('[ComponentForge] Error:', error);
 
     if (error instanceof z.ZodError) {
       return Response.json(
         {
-          error: 'Invalid request parameters',
+          type: 'error',
+          error: 'Invalid request',
+          message: 'Invalid request parameters',
           details: error.errors,
           status: 400,
-        } as APIErrorResponse,
+        },
         { status: 400 }
       );
     }
@@ -154,9 +292,11 @@ Output ONLY code, no markdown, no explanations.`;
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return Response.json(
       {
-        error: errorMessage,
+        type: 'error',
+        error: 'Server error',
+        message: errorMessage,
         status: 500,
-      } as APIErrorResponse,
+      },
       { status: 500 }
     );
   }

@@ -1,73 +1,187 @@
 'use client';
 
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Download, Copy, RefreshCw } from 'lucide-react';
-import type { Framework, ComponentResponse, APIErrorResponse } from '@agent-studio/types';
+import { useState, useCallback } from 'react';
+import { Download, Copy, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import type { Framework, ComponentResponse } from '@agent-studio/types';
 import { CodePreview } from '@agent-studio/shared-ui';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+
+interface StreamMessage {
+  type: 'processing' | 'success' | 'error';
+  message?: string;
+  data?: ComponentResponse;
+  error?: string;
+  timestamp?: string;
+}
+
+interface Message {
+  type: 'processing' | 'success' | 'error';
+  content: string;
+  timestamp: string;
+}
 
 export default function ComponentForgeAgent() {
   const [userInput, setUserInput] = useState('');
   const [framework, setFramework] = useState<Framework>('react');
   const [generatedFiles, setGeneratedFiles] = useState<Record<string, string>>({});
   const [activeFileTab, setActiveFileTab] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
 
-  const mutation = useMutation({
-    mutationFn: async (requirement: string) => {
-      // Simple requirement parser
-      const nameMatch = requirement.match(
-        /(?:create|build|generate|make|an?)\s+(?:a|an)?\s*(?:component\s+)?(?:called\s+)?(?:named\s+)?([\w]+)/i
-      );
-      const componentName = nameMatch ? nameMatch[1] : 'CustomComponent';
+  const MIN_PROMPT_LENGTH = 20;
+  const trimmedInput = userInput.trim();
+  const isPromptValid = trimmedInput.length >= MIN_PROMPT_LENGTH;
 
-      const featureKeywords = [
-        'dropdown',
-        'select',
-        'tree',
-        'modal',
-        'form',
-        'table',
-        'list',
-        'button',
-        'input',
-        'checkbox',
-        'radio',
-        'toggle',
-        'pagination',
-        'sorting',
-        'filtering',
-        'search',
-        'validation',
-        'lazy-load',
-      ];
-      const features = featureKeywords.filter((f) => requirement.toLowerCase().includes(f));
+  const handleGenerate = useCallback(
+    async (requirement: string) => {
+      if (!requirement.trim()) return;
 
-      const res = await fetch('/api/generate-component', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      setIsLoading(true);
+      setError(null);
+      setMessages([]);
+      setGeneratedFiles({});
+      setActiveFileTab('');
+
+      try {
+        // Simple requirement parser
+        const nameMatch = requirement.match(
+          /(?:create|build|generate|make|an?)\s+(?:a|an)?\s*(?:component\s+)?(?:called\s+)?(?:named\s+)?([\w]+)/i
+        );
+        const componentName = nameMatch ? nameMatch[1] : 'CustomComponent';
+
+        const featureKeywords = [
+          'dropdown',
+          'select',
+          'tree',
+          'modal',
+          'form',
+          'table',
+          'list',
+          'button',
+          'input',
+          'checkbox',
+          'radio',
+          'toggle',
+          'pagination',
+          'sorting',
+          'filtering',
+          'search',
+          'validation',
+          'lazy-load',
+        ];
+        const features = featureKeywords.filter((f) => requirement.toLowerCase().includes(f));
+
+        const requestBody = {
           requirement,
           framework,
           componentName: toPascalCase(componentName),
           features: features.length > 0 ? features : ['basic'],
-        }),
-      });
+        };
 
-      if (!res.ok) {
-        const error = (await res.json()) as APIErrorResponse;
-        throw new Error(error.error || 'Failed to generate component');
+        const res = await fetch('/api/generate-component', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+          signal: AbortSignal.timeout(120000), // 2 minute timeout
+        });
+
+        if (!res.ok) {
+          let errorMessage = `Server error (${res.status})`;
+          try {
+            const errorData = await res.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch {
+            // Use default error message
+          }
+          throw new Error(errorMessage);
+        }
+
+        if (!res.body) {
+          throw new Error('No response body received from server');
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines[lines.length - 1];
+
+            for (let i = 0; i < lines.length - 1; i++) {
+              const line = lines[i];
+              if (line.startsWith('data: ')) {
+                try {
+                  const message: StreamMessage = JSON.parse(line.slice(6));
+
+                  const timestamp = new Date().toLocaleTimeString();
+
+                  if (message.type === 'processing') {
+                    const processMessage: Message = {
+                      type: 'processing',
+                      content: message.message || 'Processing...',
+                      timestamp,
+                    };
+                    setMessages((prev) => [...prev, processMessage]);
+                  } else if (message.type === 'success' && message.data) {
+                    setGeneratedFiles(message.data.files);
+                    const firstFile = Object.keys(message.data.files)[0];
+                    setActiveFileTab(firstFile);
+
+                    const successMessage: Message = {
+                      type: 'success',
+                      content: `✓ Component generated successfully with ${Object.keys(message.data.files).length} files`,
+                      timestamp,
+                    };
+                    setMessages((prev) => [...prev, successMessage]);
+                  } else if (message.type === 'error') {
+                    const errorMsg = message.message || message.error || 'Unknown error occurred';
+                    setError(errorMsg);
+
+                    const errorMessage: Message = {
+                      type: 'error',
+                      content: `✗ Error: ${errorMsg}`,
+                      timestamp,
+                    };
+                    setMessages((prev) => [...prev, errorMessage]);
+                  }
+                } catch (parseError) {
+                  console.error('Failed to parse stream message:', parseError);
+                }
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to generate component';
+        setError(errorMessage);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: 'error',
+            content: `✗ Error: ${errorMessage}`,
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [framework]
+  );
 
-      return (await res.json()) as ComponentResponse;
-    },
-    onSuccess: (data) => {
-      setGeneratedFiles(data.files);
-      const firstFile = Object.keys(data.files)[0];
-      setActiveFileTab(firstFile);
-    },
-  });
+  const handleRetry = () => {
+    handleGenerate(userInput);
+  };
 
   const downloadAsZip = async () => {
     const zip = new JSZip();
@@ -93,8 +207,9 @@ export default function ComponentForgeAgent() {
           <textarea
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
+            disabled={isLoading}
             placeholder="Example: Create a React TreeSelect component with multi-selection, group support, and filtering capabilities..."
-            className="textarea-base"
+            className="textarea-base disabled:opacity-50"
             rows={4}
           />
         </div>
@@ -107,7 +222,8 @@ export default function ComponentForgeAgent() {
               <button
                 key={fw}
                 onClick={() => setFramework(fw)}
-                className={`px-4 py-2 rounded-lg font-semibold capitalize transition-colors ${
+                disabled={isLoading}
+                className={`px-4 py-2 rounded-lg font-semibold capitalize transition-colors disabled:opacity-50 ${
                   framework === fw
                     ? 'bg-blue-600 text-white'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
@@ -121,11 +237,11 @@ export default function ComponentForgeAgent() {
 
         {/* Generate Button */}
         <button
-          onClick={() => mutation.mutate(userInput)}
-          disabled={mutation.isPending || !userInput.trim()}
-          className="btn-primary w-full py-3 text-lg flex items-center justify-center gap-2"
+          onClick={() => handleGenerate(userInput)}
+          disabled={isLoading || !isPromptValid}
+          className="btn-primary w-full py-3 text-lg flex items-center justify-center gap-2 disabled:opacity-60"
         >
-          {mutation.isPending ? (
+          {isLoading ? (
             <>
               <RefreshCw size={20} className="animate-spin" />
               Generating...
@@ -134,11 +250,61 @@ export default function ComponentForgeAgent() {
             'Generate Component'
           )}
         </button>
+        {!isPromptValid && (
+          <p className="text-sm text-slate-600 mt-2">
+            Please enter at least {MIN_PROMPT_LENGTH} characters describing the component.
+          </p>
+        )}
 
-        {/* Error Display */}
-        {mutation.isError && (
+        {/* Processing Messages Stream */}
+        {messages.length > 0 && (
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3 max-h-48 overflow-y-auto">
+            <div className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <Clock size={16} /> Processing Status
+            </div>
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex gap-2 items-start text-sm p-2 rounded ${
+                  msg.type === 'success'
+                    ? 'bg-green-50 text-green-700'
+                    : msg.type === 'error'
+                      ? 'bg-red-50 text-red-700'
+                      : 'bg-blue-50 text-blue-700'
+                }`}
+              >
+                {msg.type === 'processing' && <Clock size={16} className="flex-shrink-0 mt-0.5" />}
+                {msg.type === 'success' && (
+                  <CheckCircle size={16} className="flex-shrink-0 mt-0.5 text-green-600" />
+                )}
+                {msg.type === 'error' && (
+                  <AlertCircle size={16} className="flex-shrink-0 mt-0.5 text-red-600" />
+                )}
+                <div className="flex-grow">
+                  <div>{msg.content}</div>
+                  <div className="text-xs opacity-70">{msg.timestamp}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error Display with Retry */}
+        {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700 text-sm font-medium">{mutation.error?.message}</p>
+            <div className="flex items-start gap-3">
+              <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-grow">
+                <p className="text-red-700 text-sm font-medium">{error}</p>
+                <button
+                  onClick={handleRetry}
+                  disabled={isLoading}
+                  className="mt-2 text-sm px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                >
+                  Retry Generation
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -151,7 +317,8 @@ export default function ComponentForgeAgent() {
             <div className="flex gap-2">
               <button
                 onClick={() => copyToClipboard(generatedFiles[activeFileTab])}
-                className="btn-secondary py-2 px-3 flex items-center gap-2 text-sm"
+                disabled={!activeFileTab}
+                className="btn-secondary py-2 px-3 flex items-center gap-2 text-sm disabled:opacity-50"
               >
                 <Copy size={16} /> Copy
               </button>
@@ -212,15 +379,16 @@ export default function ComponentForgeAgent() {
       )}
 
       {/* Help Section */}
-      {Object.keys(generatedFiles).length === 0 && !mutation.isPending && (
+      {Object.keys(generatedFiles).length === 0 && !isLoading && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h4 className="font-semibold text-blue-900 mb-3">💡 How to use ComponentForge:</h4>
           <ul className="space-y-2 text-blue-800 text-sm">
             <li>1. Describe what component you need (be specific about features)</li>
             <li>2. Select your target framework (Angular, React, or HTML)</li>
-            <li>3. Click &quot;Generate Component&quot; and wait for the AI to create it</li>
-            <li>4. Review the generated code and download in your preferred format</li>
-            <li>5. Copy, paste, and integrate into your project</li>
+            <li>3. Click &quot;Generate Component&quot; and watch the progress</li>
+            <li>4. See real-time processing status as the AI generates your component</li>
+            <li>5. Review the generated code and download in your preferred format</li>
+            <li>6. Copy, paste, and integrate into your project</li>
           </ul>
         </div>
       )}
