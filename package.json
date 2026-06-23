@@ -1,0 +1,39 @@
+{
+  "name": "agent-studio",
+  "version": "1.0.0",
+  "description": "AgentStudio - Multi-Agent AI Platform for Component Generation",
+  "private": true,
+  "packageManager": "pnpm@8.15.4",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:component-forge": "pnpm --filter @agent-studio/component-forge dev",
+    "build": "pnpm -r build",
+    "build:component-forge": "pnpm --filter @agent-studio/component-forge build",
+    "start": "pnpm --filter @agent-studio/component-forge start",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "type-check": "pnpm -r type-check",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
+    "clean": "pnpm -r clean && rm -rf node_modules .pnpm-store",
+    "docker:build": "docker build -t agent-studio:latest -f docker/Dockerfile .",
+    "docker:run": "docker run -p 3000:3000 agent-studio:latest",
+    "install-dependencies": "pnpm install"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.1",
+    "turbo": "^1.11.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "^18.3.1",
+      "react-dom": "^18.3.1"
+    }
+  },
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ]
+  }
+}
