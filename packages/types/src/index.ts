@@ -1,4 +1,4 @@
-export type Framework = 'angular' | 'react' | 'html';
+export type Framework = 'react' | 'html';
 
 export interface ParsedRequirement {
   componentName: string;

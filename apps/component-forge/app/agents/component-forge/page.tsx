@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Download, Copy, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import type { Framework, ComponentResponse } from '@agent-studio/types';
-import { CodePreview } from '@agent-studio/shared-ui';
+import { CodePreview, DynamicPreview } from '@agent-studio/shared-ui';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
@@ -12,6 +12,7 @@ interface StreamMessage {
   message?: string;
   data?: ComponentResponse;
   error?: string;
+  status?: number;
   timestamp?: string;
 }
 
@@ -26,6 +27,10 @@ export default function ComponentForgeAgent() {
   const [framework, setFramework] = useState<Framework>('react');
   const [generatedFiles, setGeneratedFiles] = useState<Record<string, string>>({});
   const [activeFileTab, setActiveFileTab] = useState<string>('');
+  const [previewComponentName, setPreviewComponentName] = useState('Component');
+  const [previewFeatures, setPreviewFeatures] = useState<string[]>([]);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const retryCountRef = useRef(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,10 +39,25 @@ export default function ComponentForgeAgent() {
   const trimmedInput = userInput.trim();
   const isPromptValid = trimmedInput.length >= MIN_PROMPT_LENGTH;
 
+  const mapApiError = (error?: string, status?: number, message?: string) => {
+    if (status === 429) {
+      return 'The AI service is temporarily busy. Please try again in a moment.';
+    }
+    if (status && status >= 500) {
+      return 'The AI service is temporarily unavailable. Please try again later.';
+    }
+    if (error === 'Groq API error') {
+      return message || 'The AI service returned an unexpected error. Please try again later.';
+    }
+    return message || error || 'Unable to generate component. Please try again.';
+  };
+
   const handleGenerate = useCallback(
     async (requirement: string) => {
       if (!requirement.trim()) return;
 
+      retryCountRef.current = 0;
+      setValidationError(null);
       setIsLoading(true);
       setError(null);
       setMessages([]);
@@ -73,10 +93,14 @@ export default function ComponentForgeAgent() {
         ];
         const features = featureKeywords.filter((f) => requirement.toLowerCase().includes(f));
 
+        const componentNamePascal = toPascalCase(componentName);
+        setPreviewComponentName(componentNamePascal);
+        setPreviewFeatures(features.length > 0 ? features : ['basic']);
+
         const requestBody = {
           requirement,
           framework,
-          componentName: toPascalCase(componentName),
+          componentName: componentNamePascal,
           features: features.length > 0 ? features : ['basic'],
         };
 
@@ -131,23 +155,30 @@ export default function ComponentForgeAgent() {
                     };
                     setMessages((prev) => [...prev, processMessage]);
                   } else if (message.type === 'success' && message.data) {
-                    setGeneratedFiles(message.data.files);
-                    const firstFile = Object.keys(message.data.files)[0];
+                    const files = Object.fromEntries(
+                      Object.entries(message.data.files).map(([name, content]) => [
+                        name,
+                        content.trim(),
+                      ])
+                    );
+                    const fileNames = Object.keys(files);
+                    const firstFile = fileNames.length > 0 ? fileNames[0] : '';
+                    setGeneratedFiles(files);
                     setActiveFileTab(firstFile);
 
                     const successMessage: Message = {
                       type: 'success',
-                      content: `✓ Component generated successfully with ${Object.keys(message.data.files).length} files`,
+                      content: `✓ Component generated successfully with ${fileNames.length} files`,
                       timestamp,
                     };
                     setMessages((prev) => [...prev, successMessage]);
                   } else if (message.type === 'error') {
-                    const errorMsg = message.message || message.error || 'Unknown error occurred';
+                    const errorMsg = mapApiError(message.error, message.status, message.message);
                     setError(errorMsg);
 
                     const errorMessage: Message = {
                       type: 'error',
-                      content: `✗ Error: ${errorMsg}`,
+                      content: `✗ ${errorMsg}`,
                       timestamp,
                     };
                     setMessages((prev) => [...prev, errorMessage]);
@@ -162,13 +193,14 @@ export default function ComponentForgeAgent() {
           reader.releaseLock();
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to generate component';
+        const errorMessageRaw = err instanceof Error ? err.message : 'Failed to generate component';
+        const errorMessage = mapApiError(undefined, undefined, errorMessageRaw);
         setError(errorMessage);
         setMessages((prev) => [
           ...prev,
           {
             type: 'error',
-            content: `✗ Error: ${errorMessage}`,
+            content: `✗ ${errorMessage}`,
             timestamp: new Date().toLocaleTimeString(),
           },
         ]);
@@ -180,7 +212,26 @@ export default function ComponentForgeAgent() {
   );
 
   const handleRetry = () => {
+    retryCountRef.current = 0;
     handleGenerate(userInput);
+  };
+
+  const handlePreviewInvalid = (reason: string) => {
+    if (retryCountRef.current < 1) {
+      retryCountRef.current += 1;
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: 'processing',
+          content: 'Generated component failed validation. Regenerating...',
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ]);
+      handleGenerate(userInput);
+      return;
+    }
+    setValidationError(reason);
+    setError(`Generated component validation failed: ${reason}`);
   };
 
   const downloadAsZip = async () => {
@@ -218,12 +269,12 @@ export default function ComponentForgeAgent() {
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-3">Framework</label>
           <div className="flex gap-3">
-            {(['angular', 'react', 'html'] as const).map((fw) => (
+            {(['react', 'html'] as const).map((fw) => (
               <button
                 key={fw}
                 onClick={() => setFramework(fw)}
                 disabled={isLoading}
-                className={`px-4 py-2 rounded-lg font-semibold capitalize transition-colors disabled:opacity-50 ${
+                className={`px-3 py-2 rounded-lg font-semibold capitalize transition-colors disabled:opacity-50 ${
                   framework === fw
                     ? 'bg-blue-600 text-white'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
@@ -236,20 +287,33 @@ export default function ComponentForgeAgent() {
         </div>
 
         {/* Generate Button */}
-        <button
-          onClick={() => handleGenerate(userInput)}
-          disabled={isLoading || !isPromptValid}
-          className="btn-primary w-full py-3 text-lg flex items-center justify-center gap-2 disabled:opacity-60"
-        >
-          {isLoading ? (
-            <>
-              <RefreshCw size={20} className="animate-spin" />
-              Generating...
-            </>
-          ) : (
-            'Generate Component'
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleGenerate(userInput)}
+            disabled={isLoading || !isPromptValid}
+            className="btn-primary py-2 text-base flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {isLoading ? (
+              <>
+                <RefreshCw size={20} className="animate-spin" />
+                Generating...
+              </>
+            ) : (
+              'Generate Component'
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              setUserInput('');
+              setGeneratedFiles({});
+            }}
+            className="btn-ghost px-3 py-2"
+            disabled={isLoading}
+          >
+            Clear
+          </button>
+        </div>
         {!isPromptValid && (
           <p className="text-sm text-slate-600 mt-2">
             Please enter at least {MIN_PROMPT_LENGTH} characters describing the component.
@@ -290,6 +354,11 @@ export default function ComponentForgeAgent() {
         )}
 
         {/* Error Display with Retry */}
+        {validationError && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-amber-700 text-sm font-medium">{validationError}</p>
+          </div>
+        )}
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-start gap-3">
@@ -311,7 +380,7 @@ export default function ComponentForgeAgent() {
 
       {/* Output Section */}
       {Object.keys(generatedFiles).length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-4 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 overflow-hidden">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-slate-900">Generated Files</h3>
             <div className="flex gap-2">
@@ -331,32 +400,51 @@ export default function ComponentForgeAgent() {
             </div>
           </div>
 
-          {/* File Tabs */}
-          <div className="flex gap-2 border-b border-slate-200 overflow-x-auto">
-            {Object.keys(generatedFiles).map((filename) => (
-              <button
-                key={filename}
-                onClick={() => setActiveFileTab(filename)}
-                className={`px-4 py-2 font-mono text-sm border-b-2 transition-colors whitespace-nowrap ${
-                  activeFileTab === filename
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {filename}
-              </button>
-            ))}
-          </div>
+          {/* Top: Live preview + attributes + code */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-1">
+              <DynamicPreview
+                files={generatedFiles}
+                framework={framework}
+                componentName={previewComponentName}
+                features={previewFeatures}
+                onInvalid={handlePreviewInvalid}
+              />
+              <div className="mt-4 p-4 bg-white rounded-lg border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2">Attributes & Interfaces</h4>
+                <AttributesList files={generatedFiles} />
+              </div>
+            </div>
 
-          {/* Code Preview */}
-          {activeFileTab && (
-            <CodePreview
-              code={generatedFiles[activeFileTab]}
-              language={detectLanguage(activeFileTab)}
-              showLineNumbers
-              className="max-h-96"
-            />
-          )}
+            <div className="lg:col-span-2">
+              {/* File Tabs */}
+              <div className="flex gap-2 border-b border-slate-200 overflow-x-auto">
+                {Object.keys(generatedFiles).map((filename) => (
+                  <button
+                    key={filename}
+                    onClick={() => setActiveFileTab(filename)}
+                    className={`px-4 py-2 font-mono text-sm border-b-2 transition-colors whitespace-nowrap ${
+                      activeFileTab === filename
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {filename}
+                  </button>
+                ))}
+              </div>
+
+              {/* Code Preview */}
+              {activeFileTab && (
+                <CodePreview
+                  code={generatedFiles[activeFileTab]}
+                  language={detectLanguage(activeFileTab)}
+                  showLineNumbers
+                  className="max-h-96 mt-4"
+                />
+              )}
+            </div>
+          </div>
 
           {/* File List */}
           <div className="mt-6">
@@ -384,7 +472,7 @@ export default function ComponentForgeAgent() {
           <h4 className="font-semibold text-blue-900 mb-3">💡 How to use ComponentForge:</h4>
           <ul className="space-y-2 text-blue-800 text-sm">
             <li>1. Describe what component you need (be specific about features)</li>
-            <li>2. Select your target framework (Angular, React, or HTML)</li>
+            <li>2. Select your target framework (React or HTML)</li>
             <li>3. Click &quot;Generate Component&quot; and watch the progress</li>
             <li>4. See real-time processing status as the AI generates your component</li>
             <li>5. Review the generated code and download in your preferred format</li>
@@ -406,4 +494,67 @@ function detectLanguage(filename: string): 'typescript' | 'html' | 'scss' | 'css
 
 function toPascalCase(str: string): string {
   return str.replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => word.toUpperCase());
+}
+
+function parseAttributesFromFiles(files: Record<string, string>): {
+  interfaces: string[];
+  props: string[];
+} {
+  const interfaces = new Set<string>();
+  const props = new Set<string>();
+
+  Object.values(files).forEach((content) => {
+    // simple interface capture
+    const ifaceRe = /interface\s+([A-Za-z0-9_]+)/g;
+    let m;
+    while ((m = ifaceRe.exec(content)) !== null) {
+      interfaces.add(m[1]);
+    }
+
+    // simple props capture (propName: type)
+    const propRe = /([A-Za-z0-9_]+)\s*:\s*[A-Za-z0-9_<>\[\]{}|]+/g;
+    while ((m = propRe.exec(content)) !== null) {
+      props.add(m[1]);
+    }
+  });
+
+  return { interfaces: Array.from(interfaces), props: Array.from(props) };
+}
+
+function AttributesList({ files }: { files: Record<string, string> }) {
+  const { interfaces, props } = parseAttributesFromFiles(files);
+
+  return (
+    <div>
+      {interfaces.length === 0 && props.length === 0 && (
+        <div className="text-sm text-slate-600">No explicit interfaces or props detected.</div>
+      )}
+
+      {interfaces.length > 0 && (
+        <div className="mb-3">
+          <div className="text-xs text-slate-500 mb-1">Interfaces</div>
+          <div className="space-y-1">
+            {interfaces.map((i) => (
+              <div key={i} className="text-sm text-slate-700">
+                {i}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {props.length > 0 && (
+        <div>
+          <div className="text-xs text-slate-500 mb-1">Attributes / Props</div>
+          <div className="space-y-1">
+            {props.map((p) => (
+              <div key={p} className="text-sm text-slate-700">
+                {p}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

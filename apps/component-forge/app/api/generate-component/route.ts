@@ -54,7 +54,7 @@ const GROQ_API_KEY = resolveGroqApiKey();
 
 const RequestSchema = z.object({
   requirement: z.string().min(5).max(1000),
-  framework: z.enum(['angular', 'react', 'html']),
+  framework: z.enum(['react', 'html']),
   componentName: z.string().min(3).max(50),
   features: z.array(z.string()).optional().default([]),
 });
@@ -116,7 +116,7 @@ export async function POST(req: Request): Promise<Response> {
           const systemPrompt = `You are ComponentForge, a specialized code generation agent.
 You generate production-ready, reusable components for web applications.
 Your responses are always valid, syntactically correct code without explanation.
-You understand TypeScript, Angular, React, HTML/CSS/JavaScript deeply.
+You understand TypeScript, React, HTML/CSS/JavaScript deeply.
 Output ONLY code, no markdown, no explanations.`;
 
           const userPrompt = getComponentPrompt(framework, requirement, componentName, features);
@@ -330,21 +330,7 @@ function parseGeneratedCode(code: string, framework: string): Record<string, str
   // If no files found, try alternative parsing
   if (Object.keys(files).length === 0) {
     // Fallback: split by common framework patterns
-    if (framework === 'angular') {
-      const patterns = [
-        { name: 'component.ts', regex: /\/\/\s*component\.ts\s*([\s\S]*?)(?=\/\/|$)/ },
-        { name: 'component.html', regex: /\/\/\s*component\.html\s*([\s\S]*?)(?=\/\/|$)/ },
-        { name: 'component.scss', regex: /\/\/\s*component\.scss\s*([\s\S]*?)(?=\/\/|$)/ },
-      ];
-
-      patterns.forEach((pattern) => {
-        const match = code.match(pattern.regex);
-        if (match && match[1]) {
-          files[pattern.name] = match[1].trim();
-        }
-      });
-    } else if (framework === 'react') {
-      // Extract from code blocks
+    if (framework === 'react') {
       const jsMatch = code.match(/\/\/\s*(\w+\.tsx?)\s*([\s\S]*?)(?=\/\/|$)/);
       if (jsMatch) {
         files[jsMatch[1]] = jsMatch[2].trim();
@@ -353,12 +339,7 @@ function parseGeneratedCode(code: string, framework: string): Record<string, str
 
     // If still nothing, return the whole code as a single file
     if (Object.keys(files).length === 0) {
-      const ext =
-        framework === 'angular'
-          ? 'component.ts'
-          : framework === 'react'
-            ? 'component.tsx'
-            : 'index.html';
+      const ext = framework === 'react' ? 'component.tsx' : 'index.html';
       files[ext] = code;
     }
   }

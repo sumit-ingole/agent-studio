@@ -102,19 +102,23 @@ Open **[http://localhost:3000](http://localhost:3000)** and start generating com
 ## What's Included?
 
 ### 🏠 Homepage (`/`)
+
 - Overview of AgentStudio
 - Features and capabilities
 - Link to launch ComponentForge
 
 ### 🤖 Agents Hub (`/agents`)
+
 - Tab interface for different AI agents
 - Currently featuring ComponentForge (active)
 - Other agents coming soon
 
 ### ⚙️ ComponentForge (`/agents/component-forge`)
+
 **The main feature!**
+
 - Describe your component needs
-- Select framework (Angular, React, HTML)
+- Select framework (React, HTML)
 - Get generated code instantly
 - Download as ZIP or individual files
 
@@ -127,7 +131,7 @@ Open **[http://localhost:3000](http://localhost:3000)** and start generating com
 1. Go to `http://localhost:3000/agents/component-forge`
 2. Describe what you need:
    ```
-   Create a React dropdown component with search, 
+   Create a React dropdown component with search,
    multi-select, and light theme
    ```
 3. Select **React** framework
@@ -271,16 +275,19 @@ AgentStudio Monorepo
 ## What's Next After Local Setup?
 
 ### 1️⃣ Test ComponentForge
+
 - Generate a few components
 - Try different frameworks
 - Download and inspect generated code
 
 ### 2️⃣ Customize
+
 - Edit prompts in `packages/ai-prompts/`
 - Modify UI in `apps/component-forge/`
 - Add new features
 
 ### 3️⃣ Deploy
+
 - Push to GitHub
 - Deploy to Vercel (5 clicks)
 - Share with your network
@@ -290,6 +297,7 @@ AgentStudio Monorepo
 ## Pro Tips
 
 ✨ **Prompt Engineering:** Be specific in component descriptions
+
 - Instead of: "Create a dropdown"
 - Better: "Create a React dropdown with multi-select, filtering, and group support"
 

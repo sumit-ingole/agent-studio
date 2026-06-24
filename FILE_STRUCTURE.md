@@ -87,6 +87,7 @@ agent-studio/                          ← Root directory
 ## 🚀 Getting Started (Copy-Paste Instructions)
 
 ### Prerequisites
+
 ```bash
 # Check Node.js version (should be 18.17+)
 node --version
@@ -95,16 +96,19 @@ node --version
 If needed, install from: https://nodejs.org
 
 ### Step 1: Install pnpm
+
 ```bash
 npm install -g pnpm@8
 ```
 
 ### Step 2: Get Groq API Key
+
 1. Go to https://console.groq.com
 2. Sign up (free)
 3. Copy your API key
 
 ### Step 3: Setup Project
+
 ```bash
 # Navigate to project
 cd agent-studio
@@ -129,6 +133,7 @@ pnpm dev:component-forge
 ```
 
 ### Step 4: Open in Browser
+
 Visit: **http://localhost:3000**
 
 ---
@@ -136,12 +141,14 @@ Visit: **http://localhost:3000**
 ## 📋 Available Commands
 
 ### Development
+
 ```bash
 pnpm dev                    # Start all apps in parallel
 pnpm dev:component-forge    # Start only ComponentForge
 ```
 
 ### Building
+
 ```bash
 pnpm build                  # Build all workspaces with Turbo
 pnpm build:component-forge  # Build only ComponentForge
@@ -149,6 +156,7 @@ pnpm start                  # Start production server
 ```
 
 ### Code Quality
+
 ```bash
 pnpm lint                   # Lint all packages
 pnpm lint:fix              # Fix linting issues
@@ -158,12 +166,14 @@ pnpm format:check          # Check formatting
 ```
 
 ### Docker
+
 ```bash
 pnpm docker:build          # Build Docker image
 pnpm docker:run            # Run Docker container (port 3000)
 ```
 
 ### Maintenance
+
 ```bash
 pnpm clean                 # Clean all builds
 pnpm install-dependencies  # Reinstall everything
@@ -174,6 +184,7 @@ pnpm install-dependencies  # Reinstall everything
 ## 🏗️ Architecture Overview
 
 ### Monorepo Benefits
+
 - **Shared dependencies** - Define once, use everywhere
 - **Code sharing** - `packages/` contains shared types, prompts, and UI components
 - **Unified linting/formatting** - Consistent code across apps
@@ -181,6 +192,7 @@ pnpm install-dependencies  # Reinstall everything
 - **Scalability** - Add new agents as new apps (e.g., `apps/state-management`)
 
 ### Technology Stack
+
 - **Frontend:** React 18, Next.js 14, Tailwind CSS
 - **AI/LLM:** Groq API (Mixtral-8x7B, free tier)
 - **State Management:** Zustand (lightweight)
@@ -194,9 +206,10 @@ pnpm install-dependencies  # Reinstall everything
 ## 🤖 How ComponentForge Works
 
 ### User Flow
+
 1. **User enters requirement** (describe component)
 2. **Frontend parses input** using simple NLP (keyword extraction)
-3. **Framework selection** (Angular/React/HTML)
+3. **Framework selection** (React/HTML)
 4. **API call to `/api/generate-component`**
 5. **Server calls Groq LLM** with scoped prompt
 6. **LLM generates code** in ~1-3 seconds
@@ -205,6 +218,7 @@ pnpm install-dependencies  # Reinstall everything
 9. **User downloads** as ZIP or copies individual files
 
 ### Key Files
+
 - **API Route:** `apps/component-forge/app/api/generate-component/route.ts`
 - **UI Component:** `apps/component-forge/app/agents/component-forge/page.tsx`
 - **Prompts:** `packages/ai-prompts/src/index.ts`
@@ -215,27 +229,32 @@ pnpm install-dependencies  # Reinstall everything
 ## 📦 File-by-File Breakdown
 
 ### Root Configuration
+
 - **package.json** - Workspace scripts, dependencies
 - **pnpm-workspace.yaml** - Defines `apps/` and `packages/` as workspaces
 - **turbo.json** - Build caching configuration
 - **tsconfig.json** - Root TypeScript config (extended by each package)
 
 ### Apps (ComponentForge)
+
 - **next.config.js** - Next.js optimizations
 - **tailwind.config.ts** - Light theme styling (slate colors, custom components)
 - **app/api/generate-component/route.ts** - Groq integration (the magic ✨)
 - **app/agents/component-forge/page.tsx** - Main UI with input, framework selector, code preview
 
 ### Packages
+
 - **types/src/index.ts** - Shared interfaces (ComponentRequest, ComponentResponse, etc.)
-- **ai-prompts/src/index.ts** - Prompt templates for each framework (Angular/React/HTML)
+- **ai-prompts/src/index.ts** - Prompt templates for each framework (React/HTML)
 - **shared-ui/src/components/** - Reusable React components (Button, Card, LoadingSpinner)
 
 ### CI/CD
+
 - **.github/workflows/ci.yml** - Lint, type-check, build on every push
 - **.github/workflows/deploy.yml** - Auto-deploy to Vercel on main branch
 
 ### Docker
+
 - **docker/Dockerfile** - Multi-stage production build
 - **vercel.json** - Vercel-specific configuration
 
@@ -244,14 +263,16 @@ pnpm install-dependencies  # Reinstall everything
 ## 🎯 Key Features Implemented
 
 ### ✅ Component Generation
+
 - [x] Requirement parsing (NLP-lite)
-- [x] Framework selection (Angular, React, HTML)
+- [x] Framework selection (React, HTML)
 - [x] Groq LLM integration
 - [x] Code parsing and file organization
 - [x] Syntax-highlighted preview
 - [x] Download as ZIP or individual files
 
 ### ✅ Multi-Agent Architecture
+
 - [x] Tab-based agent hub
 - [x] ComponentForge (active)
 - [x] Placeholder for State Management agent
@@ -259,6 +280,7 @@ pnpm install-dependencies  # Reinstall everything
 - [x] Extensible design for future agents
 
 ### ✅ Production Ready
+
 - [x] TypeScript strict mode
 - [x] Error boundaries and error handling
 - [x] Loading states and spinners
@@ -270,6 +292,7 @@ pnpm install-dependencies  # Reinstall everything
 - [x] CI/CD pipelines
 
 ### ✅ Developer Experience
+
 - [x] Hot reload (file changes instant)
 - [x] Type safety across monorepo
 - [x] Shared UI components
@@ -304,6 +327,7 @@ End-to-End Functional: ✅ Yes
 ## 🔄 Workflow Example
 
 ### Local Development
+
 ```bash
 1. pnpm install              # Install once
 2. pnpm dev:component-forge  # Start dev server
@@ -315,6 +339,7 @@ End-to-End Functional: ✅ Yes
 ```
 
 ### Adding New Agent
+
 ```bash
 1. mkdir -p apps/new-agent/app
 2. Create package.json, tsconfig.json, next.config.js
@@ -330,6 +355,7 @@ End-to-End Functional: ✅ Yes
 ## 🚀 Deployment Options
 
 ### Option 1: Vercel (Recommended - Easiest)
+
 ```bash
 1. Push to GitHub
 2. Go to vercel.com
@@ -339,6 +365,7 @@ End-to-End Functional: ✅ Yes
 ```
 
 ### Option 2: Docker
+
 ```bash
 pnpm docker:build        # Creates image
 pnpm docker:run          # Runs container on localhost:3000
@@ -346,6 +373,7 @@ docker push your-registry/agent-studio:latest
 ```
 
 ### Option 3: Self-Hosted (Node.js)
+
 ```bash
 pnpm build               # Production build
 pnpm start               # Starts server on port 3000
@@ -357,13 +385,16 @@ pnpm start               # Starts server on port 3000
 ## 🔒 Environment Variables
 
 ### Required
+
 - `NEXT_PUBLIC_GROQ_API_KEY` - Your Groq API key (get free at groq.com)
 
 ### Optional
+
 - `NEXT_PUBLIC_ENVIRONMENT` - 'development' or 'production'
 - `NEXT_PUBLIC_APP_URL` - Full URL of the app
 
 ### Never Commit
+
 - `.env.local` - Contains secrets, already in .gitignore
 
 ---
@@ -371,17 +402,20 @@ pnpm start               # Starts server on port 3000
 ## 📈 Performance Metrics
 
 ### Build Times (First Run)
+
 - Full monorepo build: ~60-90 seconds
 - Incremental builds: ~5-15 seconds (Turbo caching)
 - Dev server startup: ~3-5 seconds
 
 ### Runtime Performance
+
 - Home page load: ~400ms
 - Component generation: ~1-3 seconds (Groq latency)
 - Code preview: instant
 - Download generation: instant
 
 ### Bundle Sizes
+
 - ComponentForge (next build): ~150-200KB (gzipped)
 - Shared packages: ~20-30KB combined
 
@@ -389,47 +423,52 @@ pnpm start               # Starts server on port 3000
 
 ## 🛠️ Troubleshooting Checklist
 
-| Issue | Solution |
-|-------|----------|
-| "Cannot find module @agent-studio/*" | Run `pnpm install && pnpm build` |
-| Port 3000 in use | Use `pnpm dev:component-forge -- -p 3001` |
-| Groq API errors | Check .env.local has correct API key |
-| Rate limited (429) | Wait 1 minute (free tier: 30 req/min) |
-| TypeScript errors | Run `pnpm type-check` to see all errors |
-| pnpm not found | Install with `npm install -g pnpm@8` |
-| .env.local not loaded | Ensure file exists in root directory |
+| Issue                                 | Solution                                  |
+| ------------------------------------- | ----------------------------------------- |
+| "Cannot find module @agent-studio/\*" | Run `pnpm install && pnpm build`          |
+| Port 3000 in use                      | Use `pnpm dev:component-forge -- -p 3001` |
+| Groq API errors                       | Check .env.local has correct API key      |
+| Rate limited (429)                    | Wait 1 minute (free tier: 30 req/min)     |
+| TypeScript errors                     | Run `pnpm type-check` to see all errors   |
+| pnpm not found                        | Install with `npm install -g pnpm@8`      |
+| .env.local not loaded                 | Ensure file exists in root directory      |
 
 ---
 
 ## 📚 Documentation Files
 
-| File | Purpose |
-|------|---------|
-| README.md | Complete overview, API docs, architecture |
-| QUICKSTART.md | 5-minute setup guide (start here!) |
+| File           | Purpose                                        |
+| -------------- | ---------------------------------------------- |
+| README.md      | Complete overview, API docs, architecture      |
+| QUICKSTART.md  | 5-minute setup guide (start here!)             |
 | DEVELOPMENT.md | In-depth dev guide, adding features, workflows |
-| This file | Complete file structure and commands |
+| This file      | Complete file structure and commands           |
 
 ---
 
 ## 🎓 Learning Resources
 
 ### Understand the Monorepo
+
 - [pnpm Workspaces](https://pnpm.io/workspaces)
 - [Turborepo Caching](https://turbo.build/repo/docs)
 
 ### Next.js & React
+
 - [Next.js 14 App Router](https://nextjs.org/docs/app)
 - [React 18 Features](https://react.dev)
 
 ### TypeScript
+
 - [TypeScript Handbook](https://www.typescriptlang.org/docs)
 
 ### Groq API
+
 - [Groq Console](https://console.groq.com)
 - [Groq Models](https://console.groq.com/docs/models)
 
 ### Tailwind CSS
+
 - [Tailwind Docs](https://tailwindcss.com/docs)
 - [Custom Components](https://tailwindcss.com/docs/adding-custom-styles)
 
@@ -450,6 +489,7 @@ pnpm start               # Starts server on port 3000
 ## 🤝 Contributing
 
 This is your portfolio project! Feel free to:
+
 - Customize the UI/styling
 - Add new agents (state management, form builder, etc.)
 - Improve prompts and code generation
@@ -471,6 +511,7 @@ This is your portfolio project! Feel free to:
 ## 🎉 You're Ready!
 
 Everything is set up and ready to go. The monorepo is:
+
 - ✅ Fully typed with TypeScript
 - ✅ Properly structured for scalability
 - ✅ Configured for CI/CD
@@ -479,6 +520,7 @@ Everything is set up and ready to go. The monorepo is:
 - ✅ Well-documented
 
 **Now run:**
+
 ```bash
 pnpm install && pnpm dev:component-forge
 ```

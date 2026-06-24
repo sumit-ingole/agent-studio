@@ -7,9 +7,39 @@
 :root {
   --font-inter: 'Inter', sans-serif;
   --font-fira-code: 'Fira Code', monospace;
-  --primary: rgb(59, 130, 246);
-  --secondary: rgb(139, 92, 246);
-  --accent: rgb(236, 72, 153);
+  /* Design tokens */
+  --primary: 59 130 246;
+  --secondary: 139 92 246;
+  --accent: 236 72 153;
+  --bg: 245 247 250;
+  --surface: 255 255 255;
+  --muted: 148 163 184;
+  --radius: 8px;
+  --gap: 12px;
+  --font-size-base: 14px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --font-size-base: 14px;
+    --font-size-md: 15px;
+    --font-size-lg: 17px;
+    --font-size-xl: 19px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: 13px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+  }
 }
 
 @layer base {
@@ -22,19 +52,32 @@
   }
 
   body {
+    font-size: var(--font-size-base);
     @apply bg-slate-50 text-slate-900 font-sans antialiased;
   }
 
-  h1 {
-    @apply text-4xl font-bold tracking-tight;
+  .text-contrast-light {
+    color: #0f172a;
   }
 
-  h2 {
+  .bg-contrast-light {
+    background-color: #ffffff;
+  }
+
+  .bg-contrast-panel {
+    background-color: #f8fafc;
+  }
+
+  h1 {
     @apply text-3xl font-bold tracking-tight;
   }
 
+  h2 {
+    @apply text-2xl font-bold tracking-tight;
+  }
+
   h3 {
-    @apply text-2xl font-bold;
+    @apply text-xl font-bold;
   }
 
   button {
@@ -48,7 +91,8 @@
 
 @layer components {
   .btn-primary {
-    @apply px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors;
+    @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors inline-flex items-center justify-center;
+    min-width: 140px;
   }
 
   .btn-secondary {

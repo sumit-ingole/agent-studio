@@ -176,7 +176,6 @@ pnpm install-dependencies        # Fresh install
 
 ### Supported Frameworks
 
-- ✅ **Angular** (v15+) - Full TypeScript support
 - ✅ **React** (18+) - With hooks and memoization
 - ✅ **HTML/JavaScript** - Vanilla ES6+
 
@@ -185,13 +184,12 @@ pnpm install-dependencies        # Fresh install
 - Fully typed TypeScript code
 - HTML templates/JSX
 - SCSS/CSS styling (light theme)
-- Component module configs (Angular)
 - JSDoc documentation
 
 ### Example Prompts
 
 ```
-"Create an Angular TreeSelect with multi-selection and group support"
+"Create a React TreeSelect with multi-selection and group support"
 "React dropdown with search, filtering, and keyboard navigation"
 "HTML modal component with backdrop and close button"
 ```
@@ -358,7 +356,7 @@ Create a React button component with loading state and hover effects
 
 ### 5. Test Different Frameworks
 
-- Try same requirement with Angular (different code output)
+- Try same requirement with React (different code output)
 - Try with HTML (vanilla JavaScript)
 
 ### 6. Check API Health
@@ -524,7 +522,7 @@ After setup, you should be able to:
 - [ ] Generate a React component successfully
 - [ ] Download generated code as ZIP
 - [ ] View code in syntax-highlighted editor
-- [ ] Switch frameworks (Angular/React/HTML)
+- [ ] Switch frameworks (React/HTML)
 - [ ] See different code output for different frameworks
 - [ ] Check /api/health endpoint returns OK
 

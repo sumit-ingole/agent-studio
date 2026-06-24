@@ -1,12 +1,16 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ReactQueryProvider } from './providers';
+import dynamic from 'next/dynamic';
+import Script from 'next/script';
+
+const ThemeToggle = dynamic(() => import('./components/ThemeToggle'), { ssr: false });
 
 export const metadata: Metadata = {
   title: 'ComponentForge - AI Component Generation',
   description:
-    'Generate production-ready reusable components for Angular, React, and HTML with AI-powered ComponentForge agent.',
-  keywords: ['AI', 'Component Generation', 'Angular', 'React', 'TypeScript'],
+    'Generate production-ready reusable components for React and HTML with AI-powered ComponentForge agent.',
+  keywords: ['AI', 'Component Generation', 'React', 'HTML', 'TypeScript'],
   authors: [{ name: 'Sumit Ingole' }],
   viewport: 'width=device-width, initial-scale=1.0',
   robots: 'index, follow',
@@ -49,9 +53,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     GitHub
                   </a>
                 </nav>
+                <div className="ml-4">
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </header>
+          <Script
+            src="https://unpkg.com/@babel/standalone/babel.min.js"
+            strategy="beforeInteractive"
+          />
 
           {/* Main Content */}
           <main className="flex-1">

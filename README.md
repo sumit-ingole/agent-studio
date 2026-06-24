@@ -2,7 +2,7 @@
 
 **Multi-Agent AI Platform for Production-Ready Component Generation**
 
-AgentStudio is a monorepo-based platform where specialized AI agents generate production-ready, reusable components across Angular, React, and HTML frameworks. Currently featuring **ComponentForge**, with extensible architecture for additional agents.
+AgentStudio is a monorepo-based platform where specialized AI agents generate production-ready, reusable components for React and HTML. Currently featuring **ComponentForge**, with extensible architecture for additional agents.
 
 ---
 
@@ -53,7 +53,6 @@ agent-studio/
 │   │
 │   ├── ai-prompts/                   # Centralized prompt management
 │   │   ├── src/
-│   │   │   ├── angular/
 │   │   │   ├── react/
 │   │   │   ├── html/
 │   │   │   └── index.ts
@@ -231,7 +230,8 @@ Agent
 Generate production-ready UI components.
 
 **Capabilities:**
-- Support for Angular (v15+), React (18+), HTML5
+
+- Support for React (18+) and HTML5
 - TypeScript strict mode
 - Light theme CSS (minimal, aesthetic)
 - Responsive design
@@ -239,13 +239,15 @@ Generate production-ready UI components.
 - Framework-specific best practices
 
 **Example Prompt:**
+
 ```
-Create an Angular TreeSelect component with group selection enabled by default,
+Create a React TreeSelect component with group selection enabled by default,
 lazy loading support, and filtering. Should include @Input/@Output properties
 and method support for selectors.
 ```
 
 **Supported Output:**
+
 - Component TypeScript file
 - Template (HTML)
 - Styles (SCSS/CSS)
@@ -267,11 +269,13 @@ Create form components with validation, error handling, and accessibility.
 ### Adding a New Agent
 
 1. Create agent folder in `apps/`:
+
    ```bash
    mkdir -p apps/my-agent/app apps/my-agent/lib
    ```
 
 2. Create `apps/my-agent/package.json`:
+
    ```json
    {
      "name": "@agent-studio/my-agent",
@@ -298,6 +302,7 @@ Create form components with validation, error handling, and accessibility.
    ```
 
 3. Create `apps/my-agent/tsconfig.json`:
+
    ```json
    {
      "extends": "../../tsconfig.json",
@@ -377,25 +382,26 @@ pnpm start
 ### POST /api/generate-component
 
 **Request:**
+
 ```json
 {
-  "requirement": "Create an Angular TreeSelect with group selection...",
-  "framework": "angular",
+  "requirement": "Create a React TreeSelect with group selection...",
+  "framework": "react",
   "componentName": "TreeSelect",
   "features": ["tree", "select", "groups"]
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "componentName": "TreeSelect",
-  "framework": "angular",
+  "framework": "react",
   "files": {
-    "component.ts": "...",
-    "component.html": "...",
-    "component.scss": "..."
+    "component.tsx": "...",
+    "component.module.css": "..."
   },
   "timestamp": "2024-01-15T10:30:00Z"
 }
@@ -447,6 +453,7 @@ MIT License - See LICENSE file for details.
 ## 👤 Author
 
 **Sumit Ingole**
+
 - GitHub: [@sumit-ingole](https://github.com/sumit-ingole)
 - LinkedIn: [Sumit Ingole](https://linkedin.com/in/sumit-ingole-79427aa8/)
 

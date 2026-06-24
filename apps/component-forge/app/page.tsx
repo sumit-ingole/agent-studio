@@ -14,14 +14,16 @@ export default function Home() {
               AI-Powered Component Generation
             </h1>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              ComponentForge generates production-ready, reusable components across Angular,
-              React, and HTML frameworks using advanced AI. Built for developers who want to
-              build faster, smarter.
+              ComponentForge generates production-ready, reusable components for React and HTML
+              using advanced AI. Built for developers who want to build faster, smarter.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/agents/component-forge" className="btn-primary flex items-center justify-center gap-2">
+            <Link
+              href="/agents/component-forge"
+              className="btn-primary flex items-center justify-center gap-2"
+            >
               Launch ComponentForge <ArrowRight size={20} />
             </Link>
             <a
@@ -55,13 +57,10 @@ export default function Home() {
             {
               icon: <GitBranch className="text-green-600" size={32} />,
               title: 'Multi-Framework',
-              description: 'Support for Angular, React, and vanilla HTML + JS',
+              description: 'Support for React and vanilla HTML + JS',
             },
           ].map((feature, i) => (
-            <div
-              key={i}
-              className="card p-8 hover:shadow-md hover:-translate-y-1 transition-all"
-            >
+            <div key={i} className="card p-8 hover:shadow-md hover:-translate-y-1 transition-all">
               <div className="mb-4">{feature.icon}</div>
               <h3 className="text-lg font-semibold text-slate-900 mb-3">{feature.title}</h3>
               <p className="text-slate-600">{feature.description}</p>
@@ -86,8 +85,7 @@ export default function Home() {
             },
             {
               title: '📦 Framework Support',
-              description:
-                'Generate Angular (v15+), React (18+), and HTML5 components with best practices',
+              description: 'Generate React (18+) and HTML5 components with best practices',
             },
             {
               title: '🎨 Beautiful Styling',
@@ -117,7 +115,10 @@ export default function Home() {
           <p className="text-slate-600 mb-8">
             Describe your component requirements and let AI handle the code generation
           </p>
-          <Link href="/agents/component-forge" className="btn-primary inline-flex items-center gap-2">
+          <Link
+            href="/agents/component-forge"
+            className="btn-primary inline-flex items-center gap-2"
+          >
             Launch ComponentForge <ArrowRight size={20} />
           </Link>
         </div>
