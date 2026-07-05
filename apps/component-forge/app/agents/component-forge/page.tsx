@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Download, Copy, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import type { Framework, ComponentResponse } from '@agent-studio/types';
-import { CodePreview, DynamicPreview } from '@agent-studio/shared-ui';
+import { CodePreview } from '@agent-studio/shared-ui';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
@@ -27,8 +27,6 @@ export default function ComponentForgeAgent() {
   const [framework, setFramework] = useState<Framework>('react');
   const [generatedFiles, setGeneratedFiles] = useState<Record<string, string>>({});
   const [activeFileTab, setActiveFileTab] = useState<string>('');
-  const [previewComponentName, setPreviewComponentName] = useState('Component');
-  const [previewFeatures, setPreviewFeatures] = useState<string[]>([]);
   const [validationError, setValidationError] = useState<string | null>(null);
   const retryCountRef = useRef(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -94,8 +92,8 @@ export default function ComponentForgeAgent() {
         const features = featureKeywords.filter((f) => requirement.toLowerCase().includes(f));
 
         const componentNamePascal = toPascalCase(componentName);
-        setPreviewComponentName(componentNamePascal);
-        setPreviewFeatures(features.length > 0 ? features : ['basic']);
+        // setPreviewComponentName(componentNamePascal);
+        // setPreviewFeatures(features.length > 0 ? features : ['basic']);
 
         const requestBody = {
           requirement,
@@ -136,7 +134,7 @@ export default function ComponentForgeAgent() {
             if (done) break;
 
             buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
+            let lines = buffer.split('\n');
             buffer = lines[lines.length - 1];
 
             for (let i = 0; i < lines.length - 1; i++) {
@@ -155,12 +153,14 @@ export default function ComponentForgeAgent() {
                     };
                     setMessages((prev) => [...prev, processMessage]);
                   } else if (message.type === 'success' && message.data) {
-                    const files = Object.fromEntries(
+                    let files = Object.fromEntries(
                       Object.entries(message.data.files).map(([name, content]) => [
                         name,
                         content.trim(),
                       ])
                     );
+                    // Rename files based on component name
+                    files = renameFilesForComponent(files, componentNamePascal);
                     const fileNames = Object.keys(files);
                     const firstFile = fileNames.length > 0 ? fileNames[0] : '';
                     setGeneratedFiles(files);
@@ -214,24 +214,6 @@ export default function ComponentForgeAgent() {
   const handleRetry = () => {
     retryCountRef.current = 0;
     handleGenerate(userInput);
-  };
-
-  const handlePreviewInvalid = (reason: string) => {
-    if (retryCountRef.current < 1) {
-      retryCountRef.current += 1;
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: 'processing',
-          content: 'Generated component failed validation. Regenerating...',
-          timestamp: new Date().toLocaleTimeString(),
-        },
-      ]);
-      handleGenerate(userInput);
-      return;
-    }
-    setValidationError(reason);
-    setError(`Generated component validation failed: ${reason}`);
   };
 
   const downloadAsZip = async () => {
@@ -403,13 +385,13 @@ export default function ComponentForgeAgent() {
           {/* Top: Live preview + attributes + code */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-1">
-              <DynamicPreview
+              {/* <DynamicPreview
                 files={generatedFiles}
                 framework={framework}
                 componentName={previewComponentName}
                 features={previewFeatures}
                 onInvalid={handlePreviewInvalid}
-              />
+              /> */}
               <div className="mt-4 p-4 bg-white rounded-lg border border-slate-200">
                 <h4 className="font-semibold text-slate-900 mb-2">Attributes & Interfaces</h4>
                 <AttributesList files={generatedFiles} />
@@ -494,6 +476,46 @@ function detectLanguage(filename: string): 'typescript' | 'html' | 'scss' | 'css
 
 function toPascalCase(str: string): string {
   return str.replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => word.toUpperCase());
+}
+
+function renameFilesForComponent(
+  files: Record<string, string>,
+  componentName: string
+): Record<string, string> {
+  const renamed: Record<string, string> = {};
+
+  Object.entries(files).forEach(([filename, content]) => {
+    let newFilename = filename;
+
+    // Check if filename is a generic name
+    if (filename.match(/^(component|index|main)\.(tsx?|jsx?)$/i)) {
+      // Replace generic component name with actual component name
+      const ext = filename.split('.').pop() || 'tsx';
+      newFilename = `${componentName}.${ext}`;
+    } else if (filename.match(/^(styles?|theme|styles?\.module)\.(css|scss|sass)$/i)) {
+      // Rename style files
+      const ext = filename.split('.').pop() || 'css';
+      newFilename = `${componentName}.${ext}`;
+    } else if (filename.match(/^(test|spec|\w*\.test|\w*\.spec)\.(tsx?|jsx?)$/i)) {
+      // Rename test files
+      const ext = filename.split('.').pop() || 'tsx';
+      newFilename = `${componentName}.test.${ext}`;
+    } else if (filename.match(/^types?\.(tsx?|d\.ts)$/i)) {
+      // Rename type files
+      const ext = filename.includes('.d.ts') ? 'd.ts' : 'ts';
+      newFilename = `${componentName}.types.${ext}`;
+    } else if (filename.match(/^(README|readme|CHANGELOG|changelog)\.(md|txt)$/i)) {
+      // Keep documentation files as is, but update if they reference component name
+      newFilename = filename;
+    } else if (filename.match(/^interface|props|const|utils|helpers\.(tsx?|jsx?)$/i)) {
+      // Keep utility and interface files with their names
+      newFilename = filename;
+    }
+
+    renamed[newFilename] = content;
+  });
+
+  return renamed;
 }
 
 function parseAttributesFromFiles(files: Record<string, string>): {
