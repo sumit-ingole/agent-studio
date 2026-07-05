@@ -14,6 +14,8 @@ CONSTRAINTS:
 - Export default memoized component
 - Props should be properly typed interface
 - Include prop validation/defaultProps where appropriate
+- Keep the component syntactically correct and free of runtime errors
+- Provide a small sample data model for live preview testing in a separate JSON file named preview-data.json
 
 REQUIREMENT:
 ${requirement}
@@ -28,7 +30,10 @@ Output exactly in this format with these headers:
 [TypeScript React code]
 
 //${componentName}.module.css
-[Stylesheet code]`,
+[Stylesheet code]
+
+//preview-data.json
+{ "items": [], "label": "Demo" }`,
 
   html: (requirement: string, componentName: string, features: string[]): string => `
 You are an expert HTML/CSS/JavaScript code generator. Your ONLY job is to generate
@@ -43,6 +48,7 @@ CONSTRAINTS:
 - Include inline documentation
 - Responsive design (mobile-first)
 - Support modern browsers (ES2020+)
+- Provide a small sample data model for live preview testing in a separate JSON file named preview-data.json
 
 REQUIREMENT:
 ${requirement}
@@ -60,7 +66,10 @@ Output exactly in this format with these headers:
 [JavaScript code]
 
 //styles.css
-[Stylesheet code]`,
+[Stylesheet code]
+
+//preview-data.json
+{ "items": [], "label": "Demo" }`,
 };
 
 export function getComponentPrompt(

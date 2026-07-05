@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Download, Copy, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import type { Framework, ComponentResponse } from '@agent-studio/types';
-import { CodePreview } from '@agent-studio/shared-ui';
+import { CodePreview, DynamicPreview } from '@agent-studio/shared-ui';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
@@ -32,6 +32,9 @@ export default function ComponentForgeAgent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [previewComponentName, setPreviewComponentName] = useState('CustomComponent');
+  const [previewFeatures, setPreviewFeatures] = useState<string[]>(['basic']);
+  const [previewData, setPreviewData] = useState<Record<string, unknown> | null>(null);
 
   const MIN_PROMPT_LENGTH = 20;
   const trimmedInput = userInput.trim();
@@ -61,6 +64,7 @@ export default function ComponentForgeAgent() {
       setMessages([]);
       setGeneratedFiles({});
       setActiveFileTab('');
+      setPreviewData(null);
 
       try {
         // Simple requirement parser
@@ -92,8 +96,8 @@ export default function ComponentForgeAgent() {
         const features = featureKeywords.filter((f) => requirement.toLowerCase().includes(f));
 
         const componentNamePascal = toPascalCase(componentName);
-        // setPreviewComponentName(componentNamePascal);
-        // setPreviewFeatures(features.length > 0 ? features : ['basic']);
+        setPreviewComponentName(componentNamePascal);
+        setPreviewFeatures(features.length > 0 ? features : ['basic']);
 
         const requestBody = {
           requirement,
@@ -165,6 +169,7 @@ export default function ComponentForgeAgent() {
                     const firstFile = fileNames.length > 0 ? fileNames[0] : '';
                     setGeneratedFiles(files);
                     setActiveFileTab(firstFile);
+                    setPreviewData(extractPreviewData(files));
 
                     const successMessage: Message = {
                       type: 'success',
@@ -289,6 +294,8 @@ export default function ComponentForgeAgent() {
             onClick={() => {
               setUserInput('');
               setGeneratedFiles({});
+              setActiveFileTab('');
+              setPreviewData(null);
             }}
             className="btn-ghost px-3 py-2"
             disabled={isLoading}
@@ -382,17 +389,46 @@ export default function ComponentForgeAgent() {
             </div>
           </div>
 
-          {/* Top: Live preview + attributes + code */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-1">
-              {/* <DynamicPreview
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h4 className="text-lg font-semibold text-slate-900">Feature Preview</h4>
+                <p className="text-sm text-slate-600">
+                  The generated component is rendered here with live sample data so you can inspect
+                  the experience instantly.
+                </p>
+              </div>
+              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                Live demo
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 xl:grid-cols-[1.3fr_0.7fr] gap-4">
+              <DynamicPreview
                 files={generatedFiles}
                 framework={framework}
                 componentName={previewComponentName}
                 features={previewFeatures}
-                onInvalid={handlePreviewInvalid}
-              /> */}
-              <div className="mt-4 p-4 bg-white rounded-lg border border-slate-200">
+                previewData={previewData ?? undefined}
+              />
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="text-sm font-semibold text-slate-900 mb-3">Sample Data</div>
+                {previewData ? (
+                  <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs text-slate-700">
+                    {JSON.stringify(previewData, null, 2)}
+                  </pre>
+                ) : (
+                  <div className="text-sm text-slate-600">
+                    No sample data was generated for this component yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+            <div className="lg:col-span-1">
+              <div className="p-4 bg-white rounded-lg border border-slate-200">
                 <h4 className="font-semibold text-slate-900 mb-2">Attributes & Interfaces</h4>
                 <AttributesList files={generatedFiles} />
               </div>
@@ -472,6 +508,20 @@ function detectLanguage(filename: string): 'typescript' | 'html' | 'scss' | 'css
   if (filename.includes('.scss')) return 'scss';
   if (filename.includes('.css')) return 'css';
   return 'javascript';
+}
+
+function extractPreviewData(files: Record<string, string>): Record<string, unknown> | null {
+  const previewFile = Object.entries(files).find(
+    ([filename]) => filename.toLowerCase() === 'preview-data.json'
+  );
+  if (!previewFile) return null;
+
+  try {
+    const parsed = JSON.parse(previewFile[1]);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 function toPascalCase(str: string): string {

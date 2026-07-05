@@ -6,6 +6,7 @@ interface DynamicPreviewProps {
   framework: 'react' | 'html';
   componentName: string;
   features?: string[];
+  previewData?: Record<string, unknown>;
   onInvalid?: (reason: string) => void;
 }
 
@@ -38,11 +39,20 @@ const getMockProps = (features: string[]) => {
   return props;
 };
 
+const getPreviewProps = (features: string[], previewData?: Record<string, unknown>) => {
+  if (previewData && typeof previewData === 'object' && !Array.isArray(previewData)) {
+    return previewData;
+  }
+
+  return getMockProps(features);
+};
+
 export const DynamicPreview: React.FC<DynamicPreviewProps> = ({
   files,
   framework,
   componentName,
   features = [],
+  previewData,
   onInvalid,
 }) => {
   const rootRef = useRef<Root | null>(null);
@@ -54,7 +64,7 @@ export const DynamicPreview: React.FC<DynamicPreviewProps> = ({
     () => (previewFile ? files[previewFile].trim() : ''),
     [files, previewFile]
   );
-  const mockProps = useMemo(() => getMockProps(features), [features]);
+  const mockProps = useMemo(() => getPreviewProps(features, previewData), [features, previewData]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -127,7 +137,7 @@ return module.exports;`
         return;
       }
       rootRef.current = createRoot(containerRef.current);
-      rootRef.current.render(React.createElement(Component, mockProps));
+      rootRef.current.render(React.createElement(Component, mockProps as Record<string, unknown>));
     } catch (err: any) {
       const message = err?.message || 'Render error';
       setRenderError(message);
