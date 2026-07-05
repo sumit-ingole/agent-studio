@@ -235,269 +235,269 @@ export default function ComponentForgeAgent() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Input Section */}
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
-            Describe Your Component
-          </label>
-          <textarea
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            disabled={isLoading}
-            placeholder="Example: Create a React TreeSelect component with multi-selection, group support, and filtering capabilities..."
-            className="textarea-base disabled:opacity-50"
-            rows={4}
-          />
-        </div>
-
-        {/* Framework Selector */}
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-3">Framework</label>
-          <div className="flex gap-3">
-            {(['react', 'html'] as const).map((fw) => (
-              <button
-                key={fw}
-                onClick={() => setFramework(fw)}
-                disabled={isLoading}
-                className={`px-3 py-2 rounded-lg font-semibold capitalize transition-colors disabled:opacity-50 ${
-                  framework === fw
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                }`}
-              >
-                {fw}
-              </button>
-            ))}
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="space-y-8">
+        {/* Input Section */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-muted mb-2">
+              Describe Your Component
+            </label>
+            <textarea
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              disabled={isLoading}
+              placeholder="Example: Create a React TreeSelect component with multi-selection, group support, and filtering capabilities..."
+              className="textarea-base disabled:opacity-50"
+              rows={4}
+            />
           </div>
-        </div>
 
-        {/* Generate Button */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => handleGenerate(userInput)}
-            disabled={isLoading || !isPromptValid}
-            className="btn-primary py-2 text-base flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw size={20} className="animate-spin" />
-                Generating...
-              </>
-            ) : (
-              'Generate Component'
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              setUserInput('');
-              setGeneratedFiles({});
-              setActiveFileTab('');
-              setPreviewData(null);
-            }}
-            className="btn-ghost px-3 py-2"
-            disabled={isLoading}
-          >
-            Clear
-          </button>
-        </div>
-        {!isPromptValid && (
-          <p className="text-sm text-slate-600 mt-2">
-            Please enter at least {MIN_PROMPT_LENGTH} characters describing the component.
-          </p>
-        )}
-
-        {/* Processing Messages Stream */}
-        {messages.length > 0 && (
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3 max-h-48 overflow-y-auto">
-            <div className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <Clock size={16} /> Processing Status
-            </div>
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex gap-2 items-start text-sm p-2 rounded ${
-                  msg.type === 'success'
-                    ? 'bg-green-50 text-green-700'
-                    : msg.type === 'error'
-                      ? 'bg-red-50 text-red-700'
-                      : 'bg-blue-50 text-blue-700'
-                }`}
-              >
-                {msg.type === 'processing' && <Clock size={16} className="flex-shrink-0 mt-0.5" />}
-                {msg.type === 'success' && (
-                  <CheckCircle size={16} className="flex-shrink-0 mt-0.5 text-green-600" />
-                )}
-                {msg.type === 'error' && (
-                  <AlertCircle size={16} className="flex-shrink-0 mt-0.5 text-red-600" />
-                )}
-                <div className="flex-grow">
-                  <div>{msg.content}</div>
-                  <div className="text-xs opacity-70">{msg.timestamp}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Error Display with Retry */}
-        {validationError && (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-amber-700 text-sm font-medium">{validationError}</p>
-          </div>
-        )}
-        {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-grow">
-                <p className="text-red-700 text-sm font-medium">{error}</p>
+          {/* Framework Selector */}
+          <div>
+            <label className="block text-sm font-semibold text-muted mb-3">Framework</label>
+            <div className="flex gap-3">
+              {(['react', 'html'] as const).map((fw) => (
                 <button
-                  onClick={handleRetry}
+                  key={fw}
+                  onClick={() => setFramework(fw)}
                   disabled={isLoading}
-                  className="mt-2 text-sm px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                  className={`px-3 py-2 rounded-lg font-semibold capitalize transition-colors disabled:opacity-50 ${
+                    framework === fw ? 'btn-primary' : 'panel-bg text-muted hover:opacity-90'
+                  }`}
                 >
-                  Retry Generation
+                  {fw}
                 </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Output Section */}
-      {Object.keys(generatedFiles).length > 0 && (
-        <div className="space-y-4 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-900">Generated Files</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => copyToClipboard(generatedFiles[activeFileTab])}
-                disabled={!activeFileTab}
-                className="btn-secondary py-2 px-3 flex items-center gap-2 text-sm disabled:opacity-50"
-              >
-                <Copy size={16} /> Copy
-              </button>
-              <button
-                onClick={downloadAsZip}
-                className="btn-primary py-2 px-3 flex items-center gap-2 text-sm"
-              >
-                <Download size={16} /> Download ZIP
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h4 className="text-lg font-semibold text-slate-900">Feature Preview</h4>
-                <p className="text-sm text-slate-600">
-                  The generated component is rendered here with live sample data so you can inspect
-                  the experience instantly.
-                </p>
-              </div>
-              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                Live demo
-              </span>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 xl:grid-cols-[1.3fr_0.7fr] gap-4">
-              <DynamicPreview
-                files={generatedFiles}
-                framework={framework}
-                componentName={previewComponentName}
-                features={previewFeatures}
-                previewData={previewData ?? undefined}
-              />
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-sm font-semibold text-slate-900 mb-3">Sample Data</div>
-                {previewData ? (
-                  <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs text-slate-700">
-                    {JSON.stringify(previewData, null, 2)}
-                  </pre>
-                ) : (
-                  <div className="text-sm text-slate-600">
-                    No sample data was generated for this component yet.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-            <div className="lg:col-span-1">
-              <div className="p-4 bg-white rounded-lg border border-slate-200">
-                <h4 className="font-semibold text-slate-900 mb-2">Attributes & Interfaces</h4>
-                <AttributesList files={generatedFiles} />
-              </div>
-            </div>
-
-            <div className="lg:col-span-2">
-              {/* File Tabs */}
-              <div className="flex gap-2 border-b border-slate-200 overflow-x-auto">
-                {Object.keys(generatedFiles).map((filename) => (
-                  <button
-                    key={filename}
-                    onClick={() => setActiveFileTab(filename)}
-                    className={`px-4 py-2 font-mono text-sm border-b-2 transition-colors whitespace-nowrap ${
-                      activeFileTab === filename
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {filename}
-                  </button>
-                ))}
-              </div>
-
-              {/* Code Preview */}
-              {activeFileTab && (
-                <CodePreview
-                  code={generatedFiles[activeFileTab]}
-                  language={detectLanguage(activeFileTab)}
-                  showLineNumbers
-                  className="max-h-96 mt-4"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* File List */}
-          <div className="mt-6">
-            <h4 className="font-semibold text-slate-900 mb-3">All Generated Files:</h4>
-            <div className="space-y-2">
-              {Object.keys(generatedFiles).map((filename) => (
-                <div
-                  key={filename}
-                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200"
-                >
-                  <span className="font-mono text-sm text-slate-700">{filename}</span>
-                  <span className="text-xs text-slate-500">
-                    {Math.round(generatedFiles[filename].length / 1024)} KB
-                  </span>
-                </div>
               ))}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Help Section */}
-      {Object.keys(generatedFiles).length === 0 && !isLoading && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h4 className="font-semibold text-blue-900 mb-3">💡 How to use ComponentForge:</h4>
-          <ul className="space-y-2 text-blue-800 text-sm">
-            <li>1. Describe what component you need (be specific about features)</li>
-            <li>2. Select your target framework (React or HTML)</li>
-            <li>3. Click &quot;Generate Component&quot; and watch the progress</li>
-            <li>4. See real-time processing status as the AI generates your component</li>
-            <li>5. Review the generated code and download in your preferred format</li>
-            <li>6. Copy, paste, and integrate into your project</li>
-          </ul>
+          {/* Generate Button */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleGenerate(userInput)}
+              disabled={isLoading || !isPromptValid}
+              className="btn-primary py-2 text-base flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw size={20} className="animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                'Generate Component'
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setUserInput('');
+                setGeneratedFiles({});
+                setActiveFileTab('');
+                setPreviewData(null);
+              }}
+              className="btn-ghost px-3 py-2"
+              disabled={isLoading}
+            >
+              Clear
+            </button>
+          </div>
+          {!isPromptValid && (
+            <p className="text-sm text-muted mt-2">
+              Please enter at least {MIN_PROMPT_LENGTH} characters describing the component.
+            </p>
+          )}
+
+          {/* Processing Messages Stream */}
+          {messages.length > 0 && (
+            <div className="p-4 panel-bg panel-border rounded-lg space-y-3 max-h-48 overflow-y-auto">
+              <div className="text-sm font-semibold text-strong flex items-center gap-2">
+                <Clock size={16} /> Processing Status
+              </div>
+              {messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex gap-2 items-start text-sm p-2 rounded ${
+                    msg.type === 'success'
+                      ? 'status-pill text-success'
+                      : msg.type === 'error'
+                        ? 'status-pill text-error'
+                        : 'status-pill text-primary'
+                  }`}
+                >
+                  {msg.type === 'processing' && (
+                    <Clock size={16} className="flex-shrink-0 mt-0.5" />
+                  )}
+                  {msg.type === 'success' && (
+                    <CheckCircle size={16} className="flex-shrink-0 mt-0.5 text-success" />
+                  )}
+                  {msg.type === 'error' && (
+                    <AlertCircle size={16} className="flex-shrink-0 mt-0.5 text-error" />
+                  )}
+                  <div className="flex-grow">
+                    <div>{msg.content}</div>
+                    <div className="text-xs opacity-70">{msg.timestamp}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Error Display with Retry */}
+          {validationError && (
+            <div className="p-4 panel-bg panel-border rounded-lg">
+              <p className="text-error text-sm font-medium">{validationError}</p>
+            </div>
+          )}
+          {error && (
+            <div className="p-4 panel-bg panel-border rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle size={20} className="text-error flex-shrink-0 mt-0.5" />
+                <div className="flex-grow">
+                  <p className="text-error text-sm font-medium">{error}</p>
+                  <button
+                    onClick={handleRetry}
+                    disabled={isLoading}
+                    className="mt-2 text-sm px-3 py-1 btn-primary disabled:opacity-50"
+                  >
+                    Retry Generation
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Output Section */}
+        {Object.keys(generatedFiles).length > 0 && (
+          <div className="space-y-4 surface rounded-3xl panel-border shadow-sm p-6 overflow-hidden">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-bold text-strong">Generated Files</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => copyToClipboard(generatedFiles[activeFileTab])}
+                  disabled={!activeFileTab}
+                  className="btn-secondary py-2 px-3 flex items-center gap-2 text-sm disabled:opacity-50"
+                >
+                  <Copy size={16} /> Copy
+                </button>
+                <button
+                  onClick={downloadAsZip}
+                  className="btn-primary py-2 px-3 flex items-center gap-2 text-sm"
+                >
+                  <Download size={16} /> Download ZIP
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl panel-border panel-bg p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-lg font-semibold text-strong">Feature Preview</h4>
+                  <p className="text-sm text-muted">
+                    The generated component is rendered here with live sample data so you can
+                    inspect the experience instantly.
+                  </p>
+                </div>
+                <span className="rounded-full status-pill text-primary">Live demo</span>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 xl:grid-cols-[1.3fr_0.7fr] gap-4">
+                <DynamicPreview
+                  files={generatedFiles}
+                  framework={framework}
+                  componentName={previewComponentName}
+                  features={previewFeatures}
+                  previewData={previewData ?? undefined}
+                />
+                <div className="rounded-xl panel-border surface p-4">
+                  <div className="text-sm font-semibold text-strong mb-3">Sample Data</div>
+                  {previewData ? (
+                    <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs text-muted">
+                      {JSON.stringify(previewData, null, 2)}
+                    </pre>
+                  ) : (
+                    <div className="text-sm text-muted">
+                      No sample data was generated for this component yet.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+              <div className="lg:col-span-1">
+                <div className="p-4 surface rounded-lg panel-border">
+                  <h4 className="font-semibold text-strong mb-2">Attributes & Interfaces</h4>
+                  <AttributesList files={generatedFiles} />
+                </div>
+              </div>
+
+              <div className="lg:col-span-2">
+                {/* File Tabs */}
+                <div className="flex gap-2 border-b panel-border overflow-x-auto">
+                  {Object.keys(generatedFiles).map((filename) => (
+                    <button
+                      key={filename}
+                      onClick={() => setActiveFileTab(filename)}
+                      className={`px-4 py-2 font-mono text-sm border-b-2 transition-colors whitespace-nowrap ${
+                        activeFileTab === filename
+                          ? 'tab-button-active'
+                          : 'border-transparent tab-button hover:text-strong'
+                      }`}
+                    >
+                      {filename}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Code Preview */}
+                {activeFileTab && (
+                  <CodePreview
+                    code={generatedFiles[activeFileTab]}
+                    language={detectLanguage(activeFileTab)}
+                    showLineNumbers
+                    className="max-h-96 mt-4"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* File List */}
+            <div className="mt-6">
+              <h4 className="font-semibold text-strong mb-3">All Generated Files:</h4>
+              <div className="space-y-2">
+                {Object.keys(generatedFiles).map((filename) => (
+                  <div
+                    key={filename}
+                    className="flex items-center justify-between p-3 panel-bg rounded-lg panel-border"
+                  >
+                    <span className="font-mono text-sm text-muted">{filename}</span>
+                    <span className="text-xs text-muted">
+                      {Math.round(generatedFiles[filename].length / 1024)} KB
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Help Section */}
+        {Object.keys(generatedFiles).length === 0 && !isLoading && (
+          <div className="panel-bg panel-border rounded-lg p-6">
+            <h4 className="font-semibold text-strong mb-3">💡 How to use ComponentForge:</h4>
+            <ul className="space-y-2 text-muted text-sm">
+              <li>1. Describe what component you need (be specific about features)</li>
+              <li>2. Select your target framework (React or HTML)</li>
+              <li>3. Click &quot;Generate Component&quot; and watch the progress</li>
+              <li>4. See real-time processing status as the AI generates your component</li>
+              <li>5. Review the generated code and download in your preferred format</li>
+              <li>6. Copy, paste, and integrate into your project</li>
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -599,15 +599,15 @@ function AttributesList({ files }: { files: Record<string, string> }) {
   return (
     <div>
       {interfaces.length === 0 && props.length === 0 && (
-        <div className="text-sm text-slate-600">No explicit interfaces or props detected.</div>
+        <div className="text-sm text-muted">No explicit interfaces or props detected.</div>
       )}
 
       {interfaces.length > 0 && (
         <div className="mb-3">
-          <div className="text-xs text-slate-500 mb-1">Interfaces</div>
+          <div className="text-xs text-muted mb-1">Interfaces</div>
           <div className="space-y-1">
             {interfaces.map((i) => (
-              <div key={i} className="text-sm text-slate-700">
+              <div key={i} className="text-sm text-muted">
                 {i}
               </div>
             ))}
@@ -617,10 +617,10 @@ function AttributesList({ files }: { files: Record<string, string> }) {
 
       {props.length > 0 && (
         <div>
-          <div className="text-xs text-slate-500 mb-1">Attributes / Props</div>
+          <div className="text-xs text-muted mb-1">Attributes / Props</div>
           <div className="space-y-1">
             {props.map((p) => (
-              <div key={p} className="text-sm text-slate-700">
+              <div key={p} className="text-sm text-muted">
                 {p}
               </div>
             ))}

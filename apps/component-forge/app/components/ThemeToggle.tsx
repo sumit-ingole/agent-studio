@@ -31,8 +31,9 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="btn-ghost p-2 rounded flex items-center gap-2"
+      className="btn-ghost p-2 rounded flex items-center gap-2 border panel-border"
       aria-label="Toggle theme"
+      title="Toggle theme"
     >
       {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
     </button>

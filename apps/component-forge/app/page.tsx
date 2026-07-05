@@ -10,10 +10,10 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         <div className="text-center space-y-8">
           <div className="space-y-4">
-            <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-5xl sm:text-6xl font-bold text-strong tracking-tight">
               AI-Powered Component Generation
             </h1>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-muted max-w-3xl mx-auto leading-relaxed">
               ComponentForge generates production-ready, reusable components for React and HTML
               using advanced AI. Built for developers who want to build faster, smarter.
             </p>
@@ -40,30 +40,30 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center">Why ComponentForge?</h2>
+        <h2 className="text-3xl font-bold text-strong mb-12 text-center">Why ComponentForge?</h2>
 
         <div className="grid sm:grid-cols-3 gap-8">
           {[
             {
-              icon: <Zap className="text-blue-600" size={32} />,
+              icon: <Zap className="text-primary" size={32} />,
               title: 'Lightning Fast',
               description: 'Generate components in seconds with AI-powered code generation',
             },
             {
-              icon: <Palette className="text-purple-600" size={32} />,
+              icon: <Palette className="text-secondary" size={32} />,
               title: 'Production Ready',
               description: 'Fully typed, tested, and styled components ready for immediate use',
             },
             {
-              icon: <GitBranch className="text-green-600" size={32} />,
+              icon: <GitBranch className="text-success" size={32} />,
               title: 'Multi-Framework',
               description: 'Support for React and vanilla HTML + JS',
             },
           ].map((feature, i) => (
             <div key={i} className="card p-8 hover:shadow-md hover:-translate-y-1 transition-all">
               <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">{feature.title}</h3>
-              <p className="text-slate-600">{feature.description}</p>
+              <h3 className="text-lg font-semibold text-strong mb-3">{feature.title}</h3>
+              <p className="text-muted">{feature.description}</p>
             </div>
           ))}
         </div>
@@ -71,7 +71,7 @@ export default function Home() {
 
       {/* Capabilities Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center">Capabilities</h2>
+        <h2 className="text-3xl font-bold text-strong mb-12 text-center">Capabilities</h2>
 
         <div className="grid sm:grid-cols-2 gap-8">
           {[
@@ -101,8 +101,8 @@ export default function Home() {
             },
           ].map((item, i) => (
             <div key={i} className="card p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
-              <p className="text-slate-600 text-sm">{item.description}</p>
+              <h3 className="text-lg font-semibold text-strong mb-2">{item.title}</h3>
+              <p className="text-muted text-sm">{item.description}</p>
             </div>
           ))}
         </div>
@@ -110,9 +110,9 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <div className="card p-12 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Ready to generate?</h2>
-          <p className="text-slate-600 mb-8">
+        <div className="card p-12 surface panel-border">
+          <h2 className="text-3xl font-bold text-strong mb-4">Ready to generate?</h2>
+          <p className="text-muted mb-8">
             Describe your component requirements and let AI handle the code generation
           </p>
           <Link

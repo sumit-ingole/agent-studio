@@ -7,21 +7,37 @@
 :root {
   --font-inter: 'Inter', sans-serif;
   --font-fira-code: 'Fira Code', monospace;
-  /* Design tokens */
-  --primary: 59 130 246;
-  --secondary: 139 92 246;
-  --accent: 236 72 153;
-  --bg: 245 247 250;
-  --surface: 255 255 255;
-  --muted: 148 163 184;
+  /* Design tokens (light mode) */
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-accent: #ec4899;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-panel: #f1f5f9;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
   --radius: 8px;
   --gap: 12px;
   --font-size-base: 14px;
   --font-size-sm: 13px;
-  --font-size-base: 15px;
   --font-size-md: 16px;
   --font-size-lg: 18px;
   --font-size-xl: 20px;
+  --color-success: #16a34a;
+  --color-error: #ef4444;
+}
+
+/* Dark mode token overrides */
+html.dark {
+  --color-bg: #020617;
+  --color-surface: #0b1220;
+  --color-panel: #071022;
+  --color-text: #e6eef8;
+  --color-muted: #94a3b8;
+  --color-border: #1f2937;
+  --color-success: #22c55e;
+  --color-error: #f87171;
 }
 
 @media (max-width: 1024px) {
@@ -44,28 +60,84 @@
 
 @layer base {
   * {
-    @apply border-slate-200;
+    border-color: var(--color-border);
   }
 
   html {
     @apply scroll-smooth;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
     font-size: var(--font-size-base);
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    @apply font-sans antialiased transition-colors duration-200;
   }
 
   .text-contrast-light {
-    color: #0f172a;
+    color: var(--color-text);
   }
 
   .bg-contrast-light {
-    background-color: #ffffff;
+    background-color: var(--color-surface);
   }
 
   .bg-contrast-panel {
-    background-color: #f8fafc;
+    background-color: var(--color-panel);
+  }
+
+  /* Semantic surface classes */
+  .surface {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .panel-bg {
+    background-color: var(--color-panel);
+    color: var(--color-text);
+  }
+
+  .text-strong {
+    color: var(--color-text);
+  }
+  .text-muted {
+    color: var(--color-muted);
+  }
+
+  .text-primary {
+    color: var(--color-primary);
+  }
+
+  .text-success {
+    color: var(--color-success);
+  }
+
+  .text-error {
+    color: var(--color-error);
+  }
+
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+
+  .text-accent {
+    color: var(--color-accent);
+  }
+
+  .header-bg {
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  html.dark .header-bg {
+    background-color: rgba(11, 18, 32, 0.95);
+  }
+
+  .panel-border {
+    border-color: var(--color-border);
   }
 
   h1 {
@@ -91,62 +163,130 @@
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors inline-flex items-center justify-center;
+    @apply px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors inline-flex items-center justify-center;
+    background-color: var(--color-primary);
     min-width: 140px;
   }
 
   .btn-secondary {
-    @apply px-6 py-2 bg-slate-200 text-slate-900 rounded-lg hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors;
+    @apply px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors;
+    background-color: var(--color-panel);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
   }
 
   .btn-ghost {
-    @apply px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors;
+    @apply px-4 py-2 rounded-lg transition-colors;
+    color: var(--color-text);
+    background-color: transparent;
   }
 
   .card {
-    @apply bg-white rounded-lg border border-slate-200 shadow-sm;
+    @apply rounded-lg shadow-sm;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
   }
 
   .input-base {
-    @apply w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-900 placeholder-slate-500;
+    @apply w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    placeholder-color: var(--color-muted);
   }
 
   .textarea-base {
-    @apply w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-900 placeholder-slate-500 font-mono text-sm resize-none;
+    @apply w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    placeholder-color: var(--color-muted);
   }
 
   .tab-button {
-    @apply px-4 py-3 font-semibold text-slate-600 border-b-2 border-transparent hover:text-slate-900 transition-colors;
+    @apply px-4 py-3 font-semibold border-b-2 border-transparent transition-colors;
+    color: var(--color-muted);
+  }
+
+  .nav-link {
+    color: var(--color-muted);
+    transition: color 200ms ease;
+  }
+
+  .nav-link:hover {
+    color: var(--color-text);
   }
 
   .tab-button-active {
-    @apply border-blue-600 text-blue-600;
+    border-bottom-width: 2px;
+    border-bottom-color: var(--color-primary);
+    color: var(--color-primary);
   }
 
   .badge {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800;
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold;
+    background-color: var(--color-panel);
+    color: var(--color-text);
+  }
+
+  .status-pill {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+    background-color: var(--color-panel);
+    color: var(--color-text);
   }
 
   .error-message {
-    @apply text-red-600 text-sm font-medium;
+    color: var(--color-error);
+    font-size: 0.875rem;
+    font-weight: 600;
   }
 
   .success-message {
-    @apply text-green-600 text-sm font-medium;
+    color: var(--color-success);
+    font-size: 0.875rem;
+    font-weight: 600;
   }
 
   .loading-spinner {
-    @apply inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600;
+    display: inline-block;
+    height: 1rem;
+    width: 1rem;
+    border-radius: 9999px;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    animation: spin 1s linear infinite;
   }
+}
+
+.dark .btn-ghost {
+  color: var(--color-text);
+}
+
+.dark .btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.dark .btn-secondary {
+  background-color: var(--color-panel);
+  color: var(--color-text);
+}
+
+.dark .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 /* Syntax Highlighting for code preview */
 .code-highlight {
-  @apply bg-slate-900 text-slate-100 rounded-lg p-4 overflow-auto;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow: auto;
 }
 
 .code-highlight-line {
-  @apply block px-4 py-1 hover:bg-slate-800 transition-colors;
+  display: block;
+  padding: 0.25rem 1rem;
 }
 
 /* Smooth transitions */

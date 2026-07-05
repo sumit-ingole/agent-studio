@@ -16,6 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
@@ -25,9 +39,13 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+          if [ -z "${VERCEL_TOKEN}" ]; then
+            echo "ERROR: VERCEL_TOKEN secret is not configured. Add it in GitHub Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+          vercel build --prod
+          vercel deploy --prod --confirm
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
