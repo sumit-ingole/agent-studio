@@ -7,9 +7,9 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
-      "@agent-studio/types": ["packages/types/src"],
-      "@agent-studio/shared-ui": ["packages/shared-ui/src"],
-      "@agent-studio/ai-prompts": ["packages/ai-prompts/src"]
+      "@agent-studio/types": ["packages/types/dist", "packages/types/src"],
+      "@agent-studio/shared-ui": ["packages/shared-ui/dist", "packages/shared-ui/src"],
+      "@agent-studio/ai-prompts": ["packages/ai-prompts/dist", "packages/ai-prompts/src"]
     },
     "skipLibCheck": true,
     "esModuleInterop": true,
