@@ -44,8 +44,8 @@ jobs:
             exit 1
           fi
 
-          vercel build --prod --yes --non-interactive
-          vercel deploy --prod --confirm --yes --non-interactive
+          vercel build --prod --yes --non-interactive --token "$VERCEL_TOKEN" --local-config vercel.json
+          vercel deploy --prod --confirm --yes --non-interactive --token "$VERCEL_TOKEN" --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --local-config vercel.json
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
