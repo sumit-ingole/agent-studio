@@ -24,11 +24,9 @@
     "prettier": "^3.1.1",
     "turbo": "^1.11.2"
   },
-  "pnpm": {
-    "overrides": {
-      "react": "^18.3.1",
-      "react-dom": "^18.3.1"
-    }
+  "overrides": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "workspaces": {
     "packages": [

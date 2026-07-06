@@ -44,8 +44,8 @@ jobs:
             exit 1
           fi
 
-          vercel build --prod
-          vercel deploy --prod --confirm
+          vercel build --prod --yes --non-interactive
+          vercel deploy --prod --confirm --yes --non-interactive
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
