@@ -35,6 +35,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
+  transpilePackages: ['@agent-studio/shared-ui', '@agent-studio/types', '@agent-studio/ai-prompts'],
 };
 
 module.exports = nextConfig;
