@@ -3,7 +3,8 @@
   "name": "agent-studio",
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install --frozen-lockfile",
-  "outputDirectory": "apps/component-forge/.next",
+  "rootDirectory": "apps/component-forge",
+  "outputDirectory": ".next",
   "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_ENVIRONMENT": "production",
