@@ -41,16 +41,16 @@ function resolveGroqApiKey(): string | undefined {
   const appEnv = findFileUp('.env.local', join(process.cwd(), '..'));
 
   return (
-    process.env.groq_api_key ||
+    process.env.GROQ_API_KEY ||
     process.env.NEXT_PUBLIC_GROQ_API_KEY ||
-    (cwdEnv && getEnvValueFromFile(cwdEnv, 'groq_api_key')) ||
+    (cwdEnv && getEnvValueFromFile(cwdEnv, 'GROQ_API_KEY')) ||
     (cwdEnv && getEnvValueFromFile(cwdEnv, 'NEXT_PUBLIC_GROQ_API_KEY')) ||
-    (appEnv && getEnvValueFromFile(appEnv, 'groq_api_key')) ||
+    (appEnv && getEnvValueFromFile(appEnv, 'GROQ_API_KEY')) ||
     (appEnv && getEnvValueFromFile(appEnv, 'NEXT_PUBLIC_GROQ_API_KEY'))
   );
 }
 
-const groq_api_key = resolveGroqApiKey();
+const GROQ_API_KEY = resolveGroqApiKey();
 
 const RequestSchema = z.object({
   requirement: z.string().min(5).max(1000),
@@ -67,7 +67,7 @@ export async function POST(req: Request): Promise<Response> {
   };
 
   try {
-    if (!groq_api_key) {
+    if (!GROQ_API_KEY) {
       return Response.json(
         {
           type: 'error',
@@ -151,7 +151,7 @@ Output ONLY code, no markdown, no explanations.`;
           const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${groq_api_key}`,
+              Authorization: `Bearer ${GROQ_API_KEY}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(groqRequestBody),

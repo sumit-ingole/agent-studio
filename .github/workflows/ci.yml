@@ -39,7 +39,7 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          NEXT_PUBLIC_GROQ_API_KEY: ${{ secrets.groq_api_key }}
+          NEXT_PUBLIC_GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

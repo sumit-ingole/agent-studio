@@ -40,7 +40,7 @@ echo "✓ Setting up environment variables..."
 if [ ! -f .env.local ]; then
   cp .env.example .env.local
   echo "  Created .env.local from .env.example"
-  echo "  ⚠️  Please update .env.local with your groq_api_key"
+  echo "  ⚠️  Please update .env.local with your GROQ_API_KEY"
 else
   echo "  .env.local already exists"
 fi

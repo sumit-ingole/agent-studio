@@ -22,7 +22,7 @@ bash scripts/setup.sh
 # Or manual setup
 pnpm install
 cp .env.example .env.local
-# Edit .env.local with your groq_api_key
+# Edit .env.local with your GROQ_API_KEY
 pnpm build
 ```
 
