@@ -22,6 +22,61 @@ interface Message {
   timestamp: string;
 }
 
+const SUPPORTED_COMPONENT_TERMS = [
+  'component',
+  'button',
+  'input',
+  'form',
+  'modal',
+  'dialog',
+  'dropdown',
+  'select',
+  'table',
+  'list',
+  'card',
+  'menu',
+  'checkbox',
+  'radio',
+  'toggle',
+  'pagination',
+  'navbar',
+  'navigation',
+  'dashboard',
+  'chart',
+];
+
+const UNSUPPORTED_GOAL_TERMS = [
+  'image',
+  'photo',
+  'video',
+  'music',
+  'song',
+  'recipe',
+  'essay',
+  'story',
+  'translation',
+];
+
+const validateComponentRequest = (input: string): string | null => {
+  const normalizedInput = input.trim().toLowerCase();
+  const words = normalizedInput.match(/[a-z]+/g) || [];
+  const letters = normalizedInput.match(/[a-z]/g) || [];
+  const vowels = normalizedInput.match(/[aeiou]/g) || [];
+  const hasReadableWords = words.some((word) => word.length >= 3 && vowels.some((vowel) => word.includes(vowel)));
+  const hasComponentIntent = SUPPORTED_COMPONENT_TERMS.some((term) => normalizedInput.includes(term));
+  const hasUnsupportedGoal = UNSUPPORTED_GOAL_TERMS.some((term) => normalizedInput.includes(term));
+
+  if (letters.length < 8 || words.length < 2 || !hasReadableWords || vowels.length / letters.length < 0.18) {
+    return 'Please describe a component in plain English, for example: “Create a React button with a loading state.”';
+  }
+
+  if (hasUnsupportedGoal || !hasComponentIntent) {
+    return 'Adio currently generates UI components only. Please describe a React or HTML component, such as a form, modal, table, or dropdown.';
+  }
+
+  return null;
+};
+
 export default function ComponentForgeAgent() {
   const [userInput, setUserInput] = useState('');
   const [framework, setFramework] = useState<Framework>('react');
@@ -55,7 +110,11 @@ export default function ComponentForgeAgent() {
 
   const handleGenerate = useCallback(
     async (requirement: string) => {
-      if (!requirement.trim()) return;
+      const requestValidationError = validateComponentRequest(requirement);
+      if (requestValidationError) {
+        setValidationError(requestValidationError);
+        return;
+      }
 
       retryCountRef.current = 0;
       setValidationError(null);
@@ -245,7 +304,10 @@ export default function ComponentForgeAgent() {
             </label>
             <textarea
               value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
+              onChange={(e) => {
+                setUserInput(e.target.value);
+                setValidationError(null);
+              }}
               disabled={isLoading}
               placeholder="Example: Create a React TreeSelect component with multi-selection, group support, and filtering capabilities..."
               className="textarea-base disabled:opacity-50"
@@ -262,8 +324,8 @@ export default function ComponentForgeAgent() {
                   key={fw}
                   onClick={() => setFramework(fw)}
                   disabled={isLoading}
-                  className={`px-3 py-2 rounded-lg font-semibold capitalize transition-colors disabled:opacity-50 ${
-                    framework === fw ? 'btn-primary' : 'panel-bg text-muted hover:opacity-90'
+                  className={`px-3 py-2 font-semibold capitalize transition-colors disabled:opacity-50 ${
+                    framework === fw ? 'btn-primary' : 'btn-secondary'
                   }`}
                 >
                   {fw}
@@ -285,7 +347,7 @@ export default function ComponentForgeAgent() {
                   Generating...
                 </>
               ) : (
-                'Generate Component'
+                'Generate'
               )}
             </button>
 
@@ -490,7 +552,7 @@ export default function ComponentForgeAgent() {
             <ul className="space-y-2 text-muted text-sm">
               <li>1. Describe what component you need (be specific about features)</li>
               <li>2. Select your target framework (React or HTML)</li>
-              <li>3. Click &quot;Generate Component&quot; and watch the progress</li>
+              <li>3. Click &quot;Generate&quot; and watch the progress</li>
               <li>4. See real-time processing status as the AI generates your component</li>
               <li>5. Review the generated code and download in your preferred format</li>
               <li>6. Copy, paste, and integrate into your project</li>
