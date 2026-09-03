@@ -5,7 +5,7 @@ import { ArrowRight, Zap, GitBranch, Palette } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="bg-gradient-to-b from-slate-50 to-white">
+    <div className="">
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         <div className="text-center space-y-8">
