@@ -62,11 +62,20 @@ const validateComponentRequest = (input: string): string | null => {
   const words = normalizedInput.match(/[a-z]+/g) || [];
   const letters = normalizedInput.match(/[a-z]/g) || [];
   const vowels = normalizedInput.match(/[aeiou]/g) || [];
-  const hasReadableWords = words.some((word) => word.length >= 3 && vowels.some((vowel) => word.includes(vowel)));
-  const hasComponentIntent = SUPPORTED_COMPONENT_TERMS.some((term) => normalizedInput.includes(term));
+  const hasReadableWords = words.some(
+    (word) => word.length >= 3 && vowels.some((vowel) => word.includes(vowel))
+  );
+  const hasComponentIntent = SUPPORTED_COMPONENT_TERMS.some((term) =>
+    normalizedInput.includes(term)
+  );
   const hasUnsupportedGoal = UNSUPPORTED_GOAL_TERMS.some((term) => normalizedInput.includes(term));
 
-  if (letters.length < 8 || words.length < 2 || !hasReadableWords || vowels.length / letters.length < 0.18) {
+  if (
+    letters.length < 8 ||
+    words.length < 2 ||
+    !hasReadableWords ||
+    vowels.length / letters.length < 0.18
+  ) {
     return 'Please describe a component in plain English, for example: “Create a React button with a loading state.”';
   }
 
