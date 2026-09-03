@@ -31,7 +31,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="btn-ghost p-2 rounded flex items-center gap-2 border panel-border"
+      className="btn-ghost p-2 gap-2 border panel-border"
       aria-label="Toggle theme"
       title="Toggle theme"
     >
