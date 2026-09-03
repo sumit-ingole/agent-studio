@@ -1,7 +1,7 @@
 {
-  "name": "agent-studio",
+  "name": "adio",
   "version": "1.0.0",
-  "description": "AgentStudio - Multi-Agent AI Platform for Component Generation",
+  "description": "Adio - Agent studio, but noire professional",
   "private": true,
   "packageManager": "pnpm@8.15.4",
   "scripts": {
