@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "agent-studio",
+  "name": "adio",
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install --frozen-lockfile",
   "outputDirectory": ".next",
