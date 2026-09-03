@@ -10,12 +10,10 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         <div className="text-center space-y-8">
           <div className="space-y-4">
-            <h1 className="text-5xl sm:text-6xl font-bold text-strong tracking-tight">
-              AI-Powered Component Generation
-            </h1>
+            <h1 className="text-5xl sm:text-6xl font-bold text-strong tracking-tight">Adio</h1>
             <p className="text-xl text-muted max-w-3xl mx-auto leading-relaxed">
-              ComponentForge generates production-ready, reusable components for React and HTML
-              using advanced AI. Built for developers who want to build faster, smarter.
+              Agent studio, but noire professional. Generate production-ready, reusable components
+              for React and HTML with advanced AI.
             </p>
           </div>
 
