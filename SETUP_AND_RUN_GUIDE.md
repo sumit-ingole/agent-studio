@@ -245,7 +245,7 @@ git push -u origin main
 # 4. Set environment variable: NEXT_PUBLIC_GROQ_API_KEY
 # 5. Deploy! (auto-deploys on future pushes)
 
-# Your app is now live at: https://agent-studio.vercel.app
+# Your app is now live at: https://adio.vercel.app
 ```
 
 ### Option 2: Docker (Production)
