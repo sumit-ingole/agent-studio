@@ -1,7 +1,7 @@
 {
   "name": "@agent-studio/component-forge",
   "version": "1.0.0",
-  "description": "ComponentForge - AI Component Generation Agent",
+  "description": "Adio - Agent studio, but noire professional",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
