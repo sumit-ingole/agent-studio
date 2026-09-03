@@ -4,7 +4,7 @@ Allow: /
 Disallow: /api/
 
 # Specify sitemap
-Sitemap: https://agent-studio.vercel.app/sitemap.xml
+Sitemap: https://adio.vercel.app/sitemap.xml
 
 # Crawl delay
 Crawl-delay: 1
