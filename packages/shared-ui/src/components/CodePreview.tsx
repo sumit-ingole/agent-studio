@@ -19,29 +19,20 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
   const lines = code.split('\n');
 
   return (
-    <div
-      className={`rounded-lg border border-slate-700 flex flex-col overflow-hidden ${className}`}
-      style={{ backgroundColor: '#0f172a' }}
-    >
-      <div
-        className="px-4 py-2 text-xs font-mono flex-shrink-0"
-        style={{ backgroundColor: '#1e293b', color: '#cbd5e1' }}
-      >
+    <div className={`code-preview flex flex-col overflow-hidden ${className}`}>
+      <div className="code-preview__header px-4 py-2 text-xs font-mono flex-shrink-0">
         {language}
       </div>
-      <pre
-        className="p-4 overflow-y-auto flex-1 text-sm font-mono"
-        style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}
-      >
+      <pre className="code-preview__body p-4 overflow-y-auto flex-1 text-sm font-mono">
         <code>
           {lines.map((line, idx) => (
             <div key={idx} className="flex">
               {showLineNumbers && (
-                <span className="mr-4 text-right w-8 select-none" style={{ color: '#64748b' }}>
+                <span className="code-preview__line-number mr-4 text-right w-8 select-none">
                   {idx + 1}
                 </span>
               )}
-              <span style={{ color: '#e2e8f0' }}>{line || '\u00A0'}</span>
+              <span>{line || '\u00A0'}</span>
             </div>
           ))}
         </code>
