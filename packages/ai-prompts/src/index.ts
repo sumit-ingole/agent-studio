@@ -11,11 +11,13 @@ CONSTRAINTS:
 - Light theme CSS (no framework dependencies, plain CSS or SCSS)
 - Component should be memoized (React.memo) if appropriate
 - Include comprehensive JSDoc comments and prop documentation
-- Export default memoized component
+- Export the component as a default export. A named export is also allowed, but the default export is mandatory.
 - Props should be properly typed interface
-- Include prop validation/defaultProps where appropriate
+- Use default values in destructured props instead of the deprecated defaultProps pattern.
 - Keep the component syntactically correct and free of runtime errors
-- Provide a small sample data model for live preview testing in a separate JSON file named preview-data.json
+- Provide a small, non-empty sample data model for live preview testing in a separate JSON file named preview-data.json. It must be valid JSON and match the component props.
+- Use only these file extensions: .tsx or .jsx for the component, .css or .scss for styles, and .json for preview-data.json.
+- Do not import external packages. React imports are allowed.
 
 REQUIREMENT:
 ${requirement}
@@ -23,17 +25,22 @@ ${requirement}
 COMPONENT NAME: ${componentName}
 FEATURES: ${features.join(', ')}
 
-GENERATE ONLY the component code. No explanations, markdown, or extra text.
-Output exactly in this format with these headers:
+GENERATE standard source files, not a JSON manifest. Do not wrap the complete output in JSON or markdown fences.
+Use exactly these delimiters and include complete file contents:
 
-//${componentName}.tsx
-[TypeScript React code]
+=== FILE: ${componentName}.tsx ===
+[valid TypeScript React source with a default export]
+=== END FILE ===
+=== FILE: ${componentName}.module.css ===
+[valid CSS source]
+=== END FILE ===
+=== FILE: preview-data.json ===
+{"label":"Submit","loading":false,"disabled":false}
+=== END FILE ===
 
-//${componentName}.module.css
-[Stylesheet code]
+Only preview-data.json is JSON. The React and CSS files must remain normal source files.
 
-//preview-data.json
-{ "items": [], "label": "Demo" }`,
+`,
 
   html: (requirement: string, componentName: string, features: string[]): string => `
 You are an expert HTML/CSS/JavaScript code generator. Your ONLY job is to generate
@@ -48,7 +55,9 @@ CONSTRAINTS:
 - Include inline documentation
 - Responsive design (mobile-first)
 - Support modern browsers (ES2020+)
-- Provide a small sample data model for live preview testing in a separate JSON file named preview-data.json
+- Provide a small, non-empty sample data model for live preview testing in a separate JSON file named preview-data.json. It must be valid JSON and match the component data needs.
+- Use only these file extensions: .html, .js, .css, and .json.
+- Keep the HTML self-contained and do not load external libraries.
 
 REQUIREMENT:
 ${requirement}
@@ -56,20 +65,25 @@ ${requirement}
 COMPONENT NAME: ${componentName}
 FEATURES: ${features.join(', ')}
 
-GENERATE ONLY the component code. No explanations, markdown, or extra text.
-Output exactly in this format with these headers:
+GENERATE standard source files, not a JSON manifest. Do not wrap the complete output in JSON or markdown fences.
+Use exactly these delimiters and include complete file contents:
 
-//index.html
-[HTML code]
+=== FILE: index.html ===
+[valid HTML source for the component]
+=== END FILE ===
+=== FILE: component.js ===
+[valid standalone browser JavaScript source]
+=== END FILE ===
+=== FILE: styles.css ===
+[valid CSS source]
+=== END FILE ===
+=== FILE: preview-data.json ===
+{"label":"Submit","loading":false,"disabled":false}
+=== END FILE ===
 
-//component.js
-[JavaScript code]
+Only preview-data.json is JSON. HTML, JavaScript, and CSS must remain normal source files.
 
-//styles.css
-[Stylesheet code]
-
-//preview-data.json
-{ "items": [], "label": "Demo" }`,
+`,
 };
 
 export function getComponentPrompt(
