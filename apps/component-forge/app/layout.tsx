@@ -7,12 +7,11 @@ import Script from 'next/script';
 const ThemeToggle = dynamic(() => import('./components/ThemeToggle'), { ssr: false });
 
 export const metadata: Metadata = {
-  title: 'Adio | Agent studio, but noire professional',
+  title: 'Adio | AI solutions for builders',
   description:
-    'Adio is an agent studio, but noire professional: generate production-ready reusable components for React and HTML.',
+    'Adio is an agent studio of focused AI solutions for builders. Start with Component Forge.',
   keywords: ['AI', 'Component Generation', 'React', 'HTML', 'TypeScript'],
   authors: [{ name: 'Sumit Ingole' }],
-  viewport: 'width=device-width, initial-scale=1.0',
   robots: 'index, follow',
 };
 
@@ -23,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
-        <meta name="theme-color" content="#171717" />
+        <meta name="theme-color" content="#f7f4ed" />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="transition-colors duration-200">
@@ -33,16 +32,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center gap-3">
-                  <div className="text-2xl font-bold text-primary" aria-label="Adio">
+                  <div
+                    className="text-2xl font-extrabold tracking-tight text-primary"
+                    aria-label="Adio"
+                  >
                     Adio
                   </div>
                   <div>
-                    <p className="text-xs text-muted">Agent studio, but noire professional</p>
+                    <p className="text-xs text-muted">AI solutions for builders</p>
                   </div>
                 </div>
                 <nav className="hidden sm:flex items-center gap-6">
                   <a href="/" className="nav-link font-medium">
                     Home
+                  </a>
+                  <a href="/apps/component-forge" className="nav-link font-medium">
+                    Component Forge
                   </a>
                   <a
                     href="https://github.com/sumit-ingole/agent-studio"
@@ -73,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="panel-bg text-muted py-8 border-t panel-border">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <p className="text-sm">© {currentYear} Adio. Built with Next.js, React, and AI.</p>
+                <p className="text-sm">© {currentYear} Adio. Focused AI solutions for builders.</p>
                 <div className="flex gap-4 text-sm">
                   <a href="/" className="nav-link transition-colors">
                     Home

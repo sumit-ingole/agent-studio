@@ -1,48 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-inter: 'Inter', sans-serif;
-  --font-fira-code: 'Fira Code', monospace;
-  /* Design tokens (light mode) */
-  --color-primary: #171717;
-  --color-primary-hover: #373737;
-  --color-primary-soft: #f0f0f0;
-  --color-secondary: #737373;
-  --color-accent: #525252;
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-panel: #f1f5f9;
-  --color-text: #0f172a;
-  --color-muted: #64748b;
-  --color-border: #e2e8f0;
-  --radius: 8px;
-  --gap: 12px;
-  --font-size-base: 14px;
+  --font-sans: 'Manrope', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --color-primary: #161616;
+  --color-primary-hover: #34312d;
+  --color-primary-soft: #ece8df;
+  --color-secondary: #716e68;
+  --color-accent: #f2644f;
+  --color-accent-soft: #ffe1d9;
+  --color-bg: #f7f4ed;
+  --color-surface: #fffdf8;
+  --color-panel: #eeebe3;
+  --color-text: #1e1d1a;
+  --color-muted: #77736c;
+  --color-border: #dcd7cd;
+  --radius: 14px;
+  --font-size-base: 15px;
   --font-size-sm: 13px;
   --font-size-md: 16px;
   --font-size-lg: 18px;
   --font-size-xl: 20px;
-  --color-success: #16a34a;
-  --color-error: #ef4444;
+  --color-success: #2f8f63;
+  --color-error: #d94d43;
 }
 
 /* Dark mode token overrides */
 html.dark {
-  --color-primary: #f5f5f5;
-  --color-primary-hover: #d4d4d4;
-  --color-primary-soft: #262626;
-  --color-bg: #020617;
-  --color-surface: #0b1220;
-  --color-panel: #071022;
-  --color-text: #e6eef8;
-  --color-muted: #94a3b8;
-  --color-border: #2f2f2f;
-  --color-success: #22c55e;
-  --color-error: #f87171;
+  --color-primary: #f7f4ed;
+  --color-primary-hover: #d9d1c3;
+  --color-primary-soft: #302d28;
+  --color-accent: #ff8a72;
+  --color-accent-soft: #4b2924;
+  --color-bg: #1d1c19;
+  --color-surface: #292722;
+  --color-panel: #35312b;
+  --color-text: #f7f4ed;
+  --color-muted: #b6b0a4;
+  --color-border: #4b463e;
+  --color-success: #68c994;
+  --color-error: #ff8074;
 }
 
 @media (max-width: 1024px) {
@@ -81,7 +82,8 @@ html.dark {
     font-size: var(--font-size-base);
     background-color: var(--color-bg);
     color: var(--color-text);
-    @apply font-sans antialiased transition-colors duration-200;
+    font-family: var(--font-sans);
+    @apply antialiased transition-colors duration-200;
   }
 
   .text-contrast-light {
@@ -146,7 +148,7 @@ html.dark {
   }
 
   h1 {
-    @apply text-3xl font-bold tracking-tight;
+    @apply text-3xl font-extrabold tracking-tight;
   }
 
   h2 {
@@ -157,8 +159,9 @@ html.dark {
     @apply text-xl font-bold;
   }
 
-  button {
-    @apply transition-colors duration-200;
+  button,
+  a {
+    @apply transition-all duration-200;
   }
 
   input,
@@ -174,32 +177,36 @@ html.dark {
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors inline-flex items-center justify-center;
+    @apply px-5 py-3 rounded-full disabled:opacity-50 disabled:cursor-not-allowed font-bold inline-flex items-center justify-center;
     background-color: var(--color-primary);
     color: var(--color-bg);
     border: 1px solid var(--color-primary);
-    border-radius: 6px;
+    border-radius: 999px;
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 
   .btn-primary:hover:not(:disabled) {
     background-color: var(--color-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px color-mix(in srgb, var(--color-primary) 18%, transparent);
   }
 
   .btn-secondary {
-    @apply px-6 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors inline-flex items-center justify-center;
+    @apply px-5 py-3 rounded-full disabled:opacity-50 disabled:cursor-not-allowed font-bold inline-flex items-center justify-center;
     background-color: transparent;
     color: var(--color-text);
     border: 1px solid var(--color-border);
-    border-radius: 6px;
+    border-radius: 999px;
   }
 
   .btn-secondary:hover:not(:disabled) {
     background-color: var(--color-primary-soft);
     border-color: var(--color-text);
+    transform: translateY(-2px);
   }
 
   .btn-ghost {
-    @apply px-4 py-2 rounded-md transition-colors inline-flex items-center justify-center;
+    @apply px-4 py-2 rounded-full inline-flex items-center justify-center;
     color: var(--color-text);
     background-color: transparent;
     border-radius: 6px;
@@ -210,28 +217,32 @@ html.dark {
   }
 
   .card {
-    @apply rounded-lg shadow-sm;
+    @apply rounded-2xl shadow-sm;
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
   }
 
   .input-base {
-    @apply w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:border-transparent;
+    @apply w-full px-4 py-3 rounded-xl focus:outline-none focus:border-transparent;
     background-color: var(--color-surface);
     color: var(--color-text);
     border: 1px solid var(--color-border);
     placeholder-color: var(--color-muted);
-    accent-color: var(--color-primary);
+    accent-color: var(--color-accent);
+    transition:
+      border-color 200ms ease,
+      box-shadow 200ms ease,
+      background-color 200ms ease;
   }
 
   .input-base:focus,
   .textarea-base:focus {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text) 16%, transparent);
-    border-color: var(--color-text);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 20%, transparent);
+    border-color: var(--color-accent);
   }
 
   .textarea-base {
-    @apply w-full px-4 py-3 rounded-md focus:outline-none focus:border-transparent font-mono text-sm resize-none;
+    @apply w-full px-4 py-4 rounded-xl focus:outline-none focus:border-transparent text-sm resize-none;
     background-color: var(--color-surface);
     color: var(--color-text);
     border: 1px solid var(--color-border);
@@ -239,7 +250,7 @@ html.dark {
   }
 
   .tab-button {
-    @apply px-4 py-3 font-semibold border-b-2 border-transparent transition-colors;
+    @apply px-4 py-3 font-semibold border-b-2 border-transparent;
     color: var(--color-muted);
   }
 
@@ -256,6 +267,61 @@ html.dark {
     border-bottom-width: 2px;
     border-bottom-color: var(--color-primary);
     color: var(--color-primary);
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
+  .spotlight-card {
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 250ms ease,
+      box-shadow 250ms ease,
+      border-color 250ms ease;
+  }
+
+  .spotlight-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--spot-x, 50%) var(--spot-y, 0%),
+      color-mix(in srgb, var(--color-accent) 11%, transparent),
+      transparent 36%
+    );
+    opacity: 0;
+    transition: opacity 250ms ease;
+    pointer-events: none;
+  }
+
+  .spotlight-card:hover {
+    transform: translateY(-6px);
+    border-color: color-mix(in srgb, var(--color-accent) 48%, var(--color-border));
+    box-shadow: 0 18px 40px color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+
+  .spotlight-card:hover::before {
+    opacity: 1;
+  }
+
+  .paper-grid {
+    background-color: var(--color-bg);
+    background-image:
+      linear-gradient(
+        color-mix(in srgb, var(--color-border) 45%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-border) 45%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 42px 42px;
   }
 
   .badge {
@@ -326,7 +392,7 @@ html.dark {
 
 /* Smooth transitions */
 * {
-  @apply transition-colors duration-200;
+  border-color: var(--color-border);
 }
 
 /* Custom scrollbar */
