@@ -4,8 +4,6 @@ import { useState, useCallback, useRef } from 'react';
 import { Download, Copy, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import type { Framework, ComponentResponse } from '@agent-studio/types';
 import { CodePreview, DynamicPreview } from '@agent-studio/shared-ui';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
 
 interface StreamMessage {
   type: 'processing' | 'success' | 'error';
@@ -99,6 +97,7 @@ export default function ComponentForgeAgent() {
   const [previewComponentName, setPreviewComponentName] = useState('CustomComponent');
   const [previewFeatures, setPreviewFeatures] = useState<string[]>(['basic']);
   const [previewData, setPreviewData] = useState<Record<string, unknown> | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   const MIN_PROMPT_LENGTH = 20;
   const trimmedInput = userInput.trim();
@@ -109,12 +108,14 @@ export default function ComponentForgeAgent() {
       return 'The AI service is temporarily busy. Please try again in a moment.';
     }
     if (status && status >= 500) {
-      return 'The AI service is temporarily unavailable. Please try again later.';
+      return 'The component could not be generated right now. Please try again later.';
     }
-    if (error === 'Groq API error') {
-      return message || 'The AI service returned an unexpected error. Please try again later.';
+    if (error === 'Groq API error' || error === 'Generation failed') {
+      return 'The component could not be generated. Please adjust the description and try again.';
     }
-    return message || error || 'Unable to generate component. Please try again.';
+    return message && status === 400
+      ? 'Please check the component description and try again.'
+      : 'The component could not be generated. Please try again.';
   };
 
   const handleGenerate = useCallback(
@@ -133,13 +134,18 @@ export default function ComponentForgeAgent() {
       setGeneratedFiles({});
       setActiveFileTab('');
       setPreviewData(null);
+      setPreviewError(null);
 
       try {
         // Simple requirement parser
         const nameMatch = requirement.match(
           /(?:create|build|generate|make|an?)\s+(?:a|an)?\s*(?:component\s+)?(?:called\s+)?(?:named\s+)?([\w]+)/i
         );
-        const componentName = nameMatch ? nameMatch[1] : 'CustomComponent';
+        const componentName =
+          nameMatch &&
+          !['react', 'html', 'javascript', 'typescript'].includes(nameMatch[1].toLowerCase())
+            ? nameMatch[1]
+            : 'CustomComponent';
 
         const featureKeywords = [
           'dropdown',
@@ -290,6 +296,10 @@ export default function ComponentForgeAgent() {
   };
 
   const downloadAsZip = async () => {
+    const [{ default: JSZip }, { saveAs }] = await Promise.all([
+      import('jszip'),
+      import('file-saver'),
+    ]);
     const zip = new JSZip();
     Object.entries(generatedFiles).forEach(([filename, content]) => {
       zip.file(filename, content);
@@ -301,6 +311,21 @@ export default function ComponentForgeAgent() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
+
+  const handlePreviewInvalid = useCallback((reason: string) => {
+    void reason;
+    const friendlyMessage =
+      'The generated component could not be rendered. Please try generating it again.';
+    setPreviewError(friendlyMessage);
+    setMessages((prev) => [
+      ...prev,
+      {
+        type: 'error',
+        content: friendlyMessage,
+        timestamp: new Date().toLocaleTimeString(),
+      },
+    ]);
+  }, []);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -480,6 +505,7 @@ export default function ComponentForgeAgent() {
                   componentName={previewComponentName}
                   features={previewFeatures}
                   previewData={previewData ?? undefined}
+                  onInvalid={handlePreviewInvalid}
                 />
                 <div className="rounded-xl panel-border surface p-4">
                   <div className="text-sm font-semibold text-strong mb-3">Sample Data</div>
@@ -494,6 +520,12 @@ export default function ComponentForgeAgent() {
                   )}
                 </div>
               </div>
+              {previewError && (
+                <div className="mt-3 rounded-lg panel-bg panel-border p-3 text-sm text-error">
+                  {previewError} The generated files need a repair pass. Use Retry Generation to
+                  request a corrected artifact set.
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
