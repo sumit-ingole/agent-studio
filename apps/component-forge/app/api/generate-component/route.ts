@@ -4,6 +4,13 @@ import { z } from 'zod';
 import { getComponentPrompt } from '@agent-studio/ai-prompts';
 import type { ComponentResponse } from '@agent-studio/types';
 
+const MAX_GENERATION_ATTEMPTS = 3;
+const REACT_EXTENSIONS = /\.(tsx|jsx|css|scss|json)$/i;
+const HTML_EXTENSIONS = /\.(html|js|css|json)$/i;
+const GENERIC_GENERATION_ERROR =
+  'We could not create a working component from that request. Please adjust the component description and try again.';
+type ValidationResult = { valid: true } | { valid: false; errors: string[] };
+
 function getEnvValueFromFile(filePath: string, key: string): string | undefined {
   if (!existsSync(filePath)) return undefined;
 
@@ -117,7 +124,7 @@ export async function POST(req: Request): Promise<Response> {
 You generate production-ready, reusable components for web applications.
 Your responses are always valid, syntactically correct code without explanation.
 You understand TypeScript, React, HTML/CSS/JavaScript deeply.
-Output ONLY code, no markdown, no explanations.`;
+Output ONLY the standard source files requested by the user prompt, with no markdown or explanations.`;
 
           const userPrompt = getComponentPrompt(framework, requirement, componentName, features);
 
@@ -129,94 +136,102 @@ Output ONLY code, no markdown, no explanations.`;
             })
           );
 
-          // Call Groq OpenAI-compatible chat endpoint directly. This avoids SDK request parsing issues.
-          let generatedCode = '';
           const model = 'openai/gpt-oss-120b';
-          const groqRequestBody = {
-            model,
-            max_tokens: 4096,
-            temperature: 0.7,
-            messages: [
-              {
-                role: 'system',
-                content: systemPrompt,
-              },
-              {
-                role: 'user',
-                content: userPrompt,
-              },
-            ],
-          };
+          let files: Record<string, string> = {};
+          let validation: ValidationResult = { valid: false, errors: ['No generation attempted'] };
+          let correction = '';
 
-          const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${GROQ_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(groqRequestBody),
-          });
-
-          const responseText = await groqResponse.text();
-          let responseJson: any;
-
-          try {
-            responseJson = JSON.parse(responseText);
-          } catch {
-            responseJson = null;
-          }
-
-          if (!groqResponse.ok) {
-            const details = responseJson ?? responseText;
+          for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt += 1) {
             controller.enqueue(
               sendMessage({
-                type: 'error',
-                error: 'Groq API error',
-                message: `Groq request failed with status ${groqResponse.status}`,
-                details,
-                status: groqResponse.status,
-              })
-            );
-            controller.close();
-            return;
-          }
-
-          generatedCode = responseJson?.choices?.[0]?.message?.content ?? '';
-
-          if (!generatedCode) {
-            controller.enqueue(
-              sendMessage({
-                type: 'error',
-                error: 'Empty response',
-                message: 'The AI model returned an empty or malformed response. Please try again.',
-                details: responseJson ?? responseText,
-                status: 400,
-              })
-            );
-            controller.close();
-            return;
-          }
-
-          controller.enqueue(
-            sendMessage({
-              type: 'processing',
-              message: 'Parsing generated code into files...',
-              timestamp: new Date().toISOString(),
-            })
-          );
-
-          // Parse response into separate files
-          const files = parseGeneratedCode(generatedCode, framework);
-
-          if (Object.keys(files).length === 0) {
-            controller.enqueue(
-              sendMessage({
-                type: 'error',
-                error: 'Parsing failed',
+                type: 'processing',
                 message:
-                  'Failed to parse generated code into files. The response format might be unexpected.',
-                details: { generatedCode: generatedCode.substring(0, 200) },
-                status: 400,
+                  attempt === 1
+                    ? 'Generating component files...'
+                    : `Repairing generated files (attempt ${attempt}/${MAX_GENERATION_ATTEMPTS})...`,
+                timestamp: new Date().toISOString(),
+              })
+            );
+
+            let groqResponse: Response;
+            try {
+              groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${GROQ_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model,
+                  max_tokens: 4096,
+                  temperature: attempt === 1 ? 0.45 : 0.2,
+                  messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: `${userPrompt}${correction}` },
+                  ],
+                }),
+              });
+            } catch {
+              correction =
+                '\n\nThe previous generation attempt could not reach the generation service. Return the complete standard source-file output again.';
+              controller.enqueue(
+                sendMessage({
+                  type: 'processing',
+                  message: 'The generation service is unavailable. Retrying...',
+                  timestamp: new Date().toISOString(),
+                })
+              );
+              continue;
+            }
+
+            const responseText = await groqResponse.text();
+            let responseJson: any;
+            try {
+              responseJson = JSON.parse(responseText);
+            } catch {
+              responseJson = null;
+            }
+
+            if (!groqResponse.ok) {
+              correction =
+                '\n\nThe previous generation attempt was unavailable. Return the complete standard source-file output again.';
+              controller.enqueue(
+                sendMessage({
+                  type: 'processing',
+                  message: 'The generation service did not return a usable result. Retrying...',
+                  timestamp: new Date().toISOString(),
+                })
+              );
+              continue;
+            }
+
+            const generatedCode = responseJson?.choices?.[0]?.message?.content ?? '';
+            if (!generatedCode.trim()) {
+              correction =
+                '\n\nThe previous generation was empty. Return every required source file again.';
+              continue;
+            }
+            files = parseGeneratedCode(generatedCode, framework);
+            validation = validateGeneratedFiles(files, framework);
+            if (validation.valid) break;
+
+            correction = `\n\nYour previous source-file output was invalid. Return the complete source-file output again and correct these internal checks: ${validation.errors.join('; ')}.`;
+            controller.enqueue(
+              sendMessage({
+                type: 'processing',
+                message: 'The generated files need a correction. Retrying...',
+                timestamp: new Date().toISOString(),
+              })
+            );
+          }
+
+          if (!validation.valid) {
+            controller.enqueue(
+              sendMessage({
+                type: 'error',
+                error: 'Generation failed',
+                message: GENERIC_GENERATION_ERROR,
+                status: 422,
               })
             );
             controller.close();
@@ -251,7 +266,7 @@ Output ONLY code, no markdown, no explanations.`;
         } catch (error) {
           console.error('[ComponentForge] Stream Error:', error);
 
-          const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+          const errorMessage = GENERIC_GENERATION_ERROR;
           controller.enqueue(
             sendMessage({
               type: 'error',
@@ -314,8 +329,17 @@ Output ONLY code, no markdown, no explanations.`;
 function parseGeneratedCode(code: string, framework: string): Record<string, string> {
   const files: Record<string, string> = {};
 
-  // Match patterns like "//filename.ext" followed by code
-  const filePattern = /\/\/([\w.-]+)\s*\n([\s\S]*?)(?=\/\/|$)/g;
+  const blockPattern = /===\s*FILE:\s*([^=\n]+?)\s*===\s*\n([\s\S]*?)\n===\s*END FILE\s*===/gi;
+  let blockMatch;
+  while ((blockMatch = blockPattern.exec(code)) !== null) {
+    const filename = blockMatch[1].trim();
+    const content = blockMatch[2].trim();
+    if (filename && content) files[filename] = content;
+  }
+  if (Object.keys(files).length > 0) return files;
+
+  const filePattern =
+    /\/\/\s*(?:FILE:\s*)?([\w.-]+)\s*\n([\s\S]*?)(?=\/\/\s*(?:FILE:\s*)?[\w.-]+\s*\n|$)/g;
 
   let match;
   while ((match = filePattern.exec(code)) !== null) {
@@ -327,9 +351,7 @@ function parseGeneratedCode(code: string, framework: string): Record<string, str
     }
   }
 
-  // If no files found, try alternative parsing
   if (Object.keys(files).length === 0) {
-    // Fallback: split by common framework patterns
     if (framework === 'react') {
       const jsMatch = code.match(/\/\/\s*(\w+\.tsx?)\s*([\s\S]*?)(?=\/\/|$)/);
       if (jsMatch) {
@@ -345,6 +367,65 @@ function parseGeneratedCode(code: string, framework: string): Record<string, str
   }
 
   return files;
+}
+
+function validateGeneratedFiles(
+  files: Record<string, string>,
+  framework: 'react' | 'html'
+): ValidationResult {
+  const errors: string[] = [];
+  const extensionPattern = framework === 'react' ? REACT_EXTENSIONS : HTML_EXTENSIONS;
+  const filenames = Object.keys(files);
+
+  if (filenames.length === 0) errors.push('no files were returned');
+  const previewFilename = filenames.find(
+    (filename) => filename.toLowerCase() === 'preview-data.json'
+  );
+  if (!previewFilename) {
+    errors.push('preview-data.json is mandatory');
+  } else {
+    try {
+      const previewData = JSON.parse(files[previewFilename]);
+      if (!previewData || typeof previewData !== 'object' || Array.isArray(previewData)) {
+        errors.push('preview-data.json must contain an object');
+      }
+    } catch {
+      errors.push('preview-data.json is not valid JSON');
+    }
+  }
+
+  filenames.forEach((filename) => {
+    const content = files[filename]?.trim();
+    if (!extensionPattern.test(filename)) errors.push(`${filename} has an unsupported extension`);
+    if (!content) errors.push(`${filename} is empty`);
+    if (filename.match(/\.(tsx|jsx|js)$/i) && !/[{}]/.test(content)) {
+      errors.push(`${filename} does not contain a valid code body`);
+    }
+    if (filename.match(/\.(tsx|jsx|js)$/i) && /```/.test(content)) {
+      errors.push(`${filename} contains markdown fences instead of source code`);
+    }
+  });
+
+  const componentFile = filenames.find((filename) => /\.(tsx|jsx)$/i.test(filename));
+  if (framework === 'react' && !componentFile) {
+    errors.push('a .tsx or .jsx component file is required');
+  } else if (framework === 'react' && componentFile) {
+    const componentSource = files[componentFile];
+    if (!/export\s+default\s+/.test(componentSource)) {
+      errors.push('the React component must have a default export');
+    }
+    if (!/return\s*\(|=>\s*\(?\s*</.test(componentSource)) {
+      errors.push('the React file does not contain a renderable component body');
+    }
+  }
+  if (framework === 'html' && !filenames.some((filename) => filename.endsWith('.html'))) {
+    errors.push('an .html entry file is required');
+  }
+  if (framework === 'html' && !filenames.some((filename) => filename.endsWith('.js'))) {
+    errors.push('a JavaScript behavior file is required');
+  }
+
+  return errors.length > 0 ? { valid: false, errors } : { valid: true };
 }
 
 export async function GET(): Promise<Response> {
