@@ -296,16 +296,24 @@ export default function ComponentForgeAgent() {
   };
 
   const downloadAsZip = async () => {
-    const [{ default: JSZip }, { saveAs }] = await Promise.all([
-      import('jszip'),
-      import('file-saver'),
-    ]);
-    const zip = new JSZip();
-    Object.entries(generatedFiles).forEach(([filename, content]) => {
-      zip.file(filename, content);
-    });
-    const blob = await zip.generateAsync({ type: 'blob' });
-    saveAs(blob, 'component.zip');
+    try {
+      const response = await fetch('/api/download-component', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: generatedFiles }),
+      });
+      if (!response.ok) throw new Error('archive request failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'component.zip';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError('The component archive could not be downloaded. Please try again.');
+    }
   };
 
   const copyToClipboard = (text: string) => {
