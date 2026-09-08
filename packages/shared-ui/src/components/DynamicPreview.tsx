@@ -10,24 +10,23 @@ interface DynamicPreviewProps {
   onInvalid?: (reason: string) => void;
 }
 
-const stripCssImports = (code: string) =>
-  code.replace(/import\s+['"][^'"]+\.(module\.)?(css|scss|sass)['"];?/g, '');
+const isStyleFile = (filename: string) => /\.(css|scss|sass)$/i.test(filename);
+const getStyles = (files: Record<string, string>) =>
+  Object.entries(files)
+    .filter(([filename]) => isStyleFile(filename))
+    .map(([, content]) => content)
+    .join('\n');
 
-const selectPreviewFile = (files: Record<string, string>, framework: string) => {
-  const ordered = Object.keys(files).sort((a, b) => a.length - b.length);
-  if (framework === 'react') {
-    return ordered.find((name) => /\.tsx?$/.test(name));
+const getMockProps = (features: string[], previewData?: Record<string, unknown>) => {
+  if (previewData && typeof previewData === 'object' && !Array.isArray(previewData)) {
+    return previewData;
   }
-  if (framework === 'html') {
-    return ordered.find((name) => name.endsWith('.html')) || ordered[0];
-  }
-  return ordered[0];
-};
-
-const getMockProps = (features: string[]) => {
   const props: Record<string, unknown> = {};
   if (features.includes('list') || features.includes('table')) {
-    props.items = Array.from({ length: 5 }).map((_, i) => ({ id: i + 1, label: `Item ${i + 1}` }));
+    props.items = Array.from({ length: 5 }, (_, index) => ({
+      id: index + 1,
+      label: `Item ${index + 1}`,
+    }));
   }
   if (features.includes('dropdown') || features.includes('select')) {
     props.options = ['Option A', 'Option B', 'Option C'];
@@ -39,13 +38,26 @@ const getMockProps = (features: string[]) => {
   return props;
 };
 
-const getPreviewProps = (features: string[], previewData?: Record<string, unknown>) => {
-  if (previewData && typeof previewData === 'object' && !Array.isArray(previewData)) {
-    return previewData;
-  }
-
-  return getMockProps(features);
+const selectPreviewFile = (files: Record<string, string>, framework: 'react' | 'html') => {
+  const filenames = Object.keys(files);
+  if (framework === 'react') return filenames.find((filename) => /\.(tsx|jsx)$/i.test(filename));
+  return filenames.find((filename) => filename.endsWith('.html'));
 };
+
+const stripImports = (code: string) =>
+  code
+    .replace(
+      /import\s+([A-Za-z_$][\w$]*)\s+from\s+['"][^'"]+\.(?:module\.)?(?:css|scss|sass)['"];?/g,
+      'const $1 = new Proxy({}, { get: (_, key) => key });'
+    )
+    .replace(/import\s+[^;]+from\s+['"][^'"]+['"];?/g, '')
+    .replace(/import\s+['"][^'"]+['"];?/g, '');
+
+const getScripts = (files: Record<string, string>, htmlFile: string) =>
+  Object.entries(files)
+    .filter(([filename]) => filename !== htmlFile && /\.js$/i.test(filename))
+    .map(([, content]) => content)
+    .join('\n');
 
 export const DynamicPreview: React.FC<DynamicPreviewProps> = ({
   files,
@@ -58,107 +70,119 @@ export const DynamicPreview: React.FC<DynamicPreviewProps> = ({
   const rootRef = useRef<Root | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
-
   const previewFile = useMemo(() => selectPreviewFile(files, framework), [files, framework]);
-  const previewCode = useMemo(
-    () => (previewFile ? files[previewFile].trim() : ''),
-    [files, previewFile]
-  );
-  const mockProps = useMemo(() => getPreviewProps(features, previewData), [features, previewData]);
+  const previewProps = useMemo(() => getMockProps(features, previewData), [features, previewData]);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    if (rootRef.current) {
-      rootRef.current.unmount();
-      rootRef.current = null;
-    }
+    rootRef.current?.unmount();
+    rootRef.current = null;
+    containerRef.current.replaceChildren();
     setRenderError(null);
 
     if (!previewFile) {
-      containerRef.current.innerHTML =
-        '<div class="text-sm text-slate-600">No preview file available.</div>';
+      const message = 'No entry file was generated for this preview.';
+      setRenderError(message);
+      onInvalid?.(message);
       return;
     }
 
     if (framework === 'html') {
-      containerRef.current.innerHTML = previewCode;
+      const frame = document.createElement('iframe');
+      frame.title = 'Generated HTML component preview';
+      frame.className = 'h-[420px] w-full border-0 bg-white';
+      const data = JSON.stringify(previewProps).replace(/</g, '\\u003c');
+      frame.srcdoc = `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>${getStyles(files)}</style></head><body>${files[previewFile]}<script>window.previewData=${data};</script><script>${getScripts(files, previewFile)}</script></body></html>`;
+      frame.onerror = () => {
+        const message = 'The generated HTML preview could not be loaded.';
+        setRenderError(message);
+        onInvalid?.(message);
+      };
+      containerRef.current.appendChild(frame);
       return;
     }
 
-    if (framework !== 'react') {
-      containerRef.current.innerHTML =
-        '<div class="text-sm text-slate-600">Preview is only available for React components.</div>';
-      return;
-    }
-
-    const Babel = (window as any).Babel;
+    const Babel = (
+      window as typeof window & {
+        Babel?: { transform: (source: string, options: object) => { code: string } };
+      }
+    ).Babel;
     if (!Babel) {
-      const msg = 'Babel is not loaded yet. Reload the page.';
-      setRenderError(msg);
-      onInvalid?.(msg);
-      return;
-    }
-
-    const source = stripCssImports(previewCode);
-    let transformed: string;
-    try {
-      transformed = Babel.transform(source, {
-        presets: [
-          ['typescript', { allExtensions: true }],
-          ['react', { runtime: 'automatic' }],
-        ],
-        plugins: ['transform-modules-commonjs'],
-        sourceType: 'module',
-      }).code;
-    } catch (err: any) {
-      const message = err?.message || 'Syntax error';
+      const message = 'The preview compiler is not loaded yet.';
       setRenderError(message);
       onInvalid?.(message);
       return;
     }
 
     try {
-      const module = { exports: {} as any };
-      const require = () => ({});
+      const transformed = Babel.transform(stripImports(files[previewFile]), {
+        presets: [
+          ['typescript', { ignoreExtensions: true }],
+          ['react', { runtime: 'classic' }],
+        ],
+        plugins: ['syntax-jsx', 'transform-modules-commonjs'],
+        sourceType: 'module',
+      }).code;
+      const module = { exports: {} as Record<string, unknown> };
+      const hooks = 'useState,useEffect,useMemo,useCallback,useRef,memo,Fragment';
       const fn = new Function(
         'React',
         'exports',
         'module',
-        'require',
-        `${transformed}
-return module.exports;`
+        `const {${hooks}} = React;${transformed}\nreturn module.exports;`
       );
-      const moduleExports = fn(React, module.exports, module, require);
-      const Component = moduleExports.default || moduleExports[componentName] || moduleExports;
-      if (!Component || typeof Component !== 'function') {
-        const msg = 'Rendered file did not export a valid component.';
-        setRenderError(msg);
-        onInvalid?.(msg);
-        return;
+      const exports = fn(React, module.exports, module) as Record<string, unknown>;
+      const Component = resolveComponentExport(exports, componentName);
+      if (!Component) {
+        throw new Error('The entry file did not export a React component.');
       }
-      rootRef.current = createRoot(containerRef.current);
-      rootRef.current.render(React.createElement(Component, mockProps as Record<string, unknown>));
-    } catch (err: any) {
-      const message = err?.message || 'Render error';
+
+      const styleTag = document.createElement('style');
+      styleTag.textContent = getStyles(files);
+      containerRef.current.appendChild(styleTag);
+      const mount = document.createElement('div');
+      mount.className = 'min-h-[380px]';
+      containerRef.current.appendChild(mount);
+      rootRef.current = createRoot(mount);
+      rootRef.current.render(React.createElement(Component as React.ElementType, previewProps));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'The generated component could not be compiled.';
       setRenderError(message);
       onInvalid?.(message);
-      return;
     }
-  }, [framework, mockProps, onInvalid, previewCode, previewFile, componentName]);
+
+    return () => {
+      rootRef.current?.unmount();
+      rootRef.current = null;
+    };
+  }, [componentName, files, framework, onInvalid, previewFile, previewProps]);
 
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
-      <div className="bg-slate-100 px-3 py-2 text-xs text-slate-600 font-medium">
-        Live Component Preview
-      </div>
-      <div ref={containerRef} className="min-h-[420px] p-4"></div>
-      {renderError && (
-        <div className="border-t border-slate-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          Preview issue: {renderError}
-        </div>
-      )}
+    <div className="preview-shell">
+      <div className="preview-shell__header">Live Component Preview</div>
+      <div ref={containerRef} className="preview-shell__body" />
+      {renderError && <div className="preview-shell__error">Preview issue: {renderError}</div>}
     </div>
   );
 };
 
 export default DynamicPreview;
+
+function resolveComponentExport(
+  exports: Record<string, unknown>,
+  componentName: string
+): React.ElementType | null {
+  const preferred = [exports.default, exports[componentName]];
+  const namedExport = Object.entries(exports).find(
+    ([name, value]) => name !== '__esModule' && typeof value === 'function'
+  )?.[1];
+  const isRenderableExport = (value: unknown) =>
+    typeof value === 'function' ||
+    (value &&
+      typeof value === 'object' &&
+      '$$typeof' in value &&
+      ('type' in value || '_payload' in value));
+  const candidate = preferred.find(isRenderableExport) ?? namedExport;
+  return isRenderableExport(candidate) ? (candidate as React.ElementType) : null;
+}
