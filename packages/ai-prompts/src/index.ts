@@ -15,6 +15,8 @@ CONSTRAINTS:
 - Props should be properly typed interface
 - Use default values in destructured props instead of the deprecated defaultProps pattern.
 - Keep the component syntactically correct and free of runtime errors
+- Use a stable default visual pattern: accessible button states, visible focus ring, 8px radius, 44px minimum height, restrained blue accent, neutral surface colors, and responsive sizing.
+- Include base styles for :root, box-sizing, focus-visible, disabled, hover, and reduced-motion behavior in the CSS file.
 - Provide a small, non-empty sample data model for live preview testing in a separate JSON file named preview-data.json. It must be valid JSON and match the component props.
 - Use only these file extensions: .tsx or .jsx for the component, .css or .scss for styles, and .json for preview-data.json.
 - Do not import external packages. React imports are allowed.
@@ -32,7 +34,7 @@ Use exactly these delimiters and include complete file contents:
 [valid TypeScript React source with a default export]
 === END FILE ===
 === FILE: ${componentName}.module.css ===
-[valid CSS source]
+[valid CSS source with the required default design pattern and component classes]
 === END FILE ===
 === FILE: preview-data.json ===
 {"label":"Submit","loading":false,"disabled":false}
@@ -58,6 +60,8 @@ CONSTRAINTS:
 - Provide a small, non-empty sample data model for live preview testing in a separate JSON file named preview-data.json. It must be valid JSON and match the component data needs.
 - Use only these file extensions: .html, .js, .css, and .json.
 - Keep the HTML self-contained and do not load external libraries.
+- Use a stable default visual pattern: centered responsive surface, 8px radius, neutral background, restrained blue accent, visible focus ring, semantic states, and 44px minimum interactive targets.
+- Include base styles for :root, box-sizing, body, focus-visible, disabled, hover, and reduced-motion behavior in styles.css.
 
 REQUIREMENT:
 ${requirement}
@@ -75,7 +79,7 @@ Use exactly these delimiters and include complete file contents:
 [valid standalone browser JavaScript source]
 === END FILE ===
 === FILE: styles.css ===
-[valid CSS source]
+[valid CSS source with the required default design pattern]
 === END FILE ===
 === FILE: preview-data.json ===
 {"label":"Submit","loading":false,"disabled":false}
