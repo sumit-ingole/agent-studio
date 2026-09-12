@@ -7,7 +7,7 @@
   "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_ENVIRONMENT": "production",
-    "NEXT_PUBLIC_APP_URL": "https://$VERCEL_PROJECT_NAME.vercel.app"
+    "NEXT_PUBLIC_APP_URL": "https://adio-agents.vercel.app"
   },
   "git": {
     "deploymentEnabled": {
@@ -15,12 +15,6 @@
       "develop": true
     }
   },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1y"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -1,0 +1,9 @@
+{
+  "name": "@agent-studio/adio-base",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Adio Base FastAPI service deployed on Vercel",
+  "scripts": {
+    "build": "python3 -m compileall -q app api"
+  }
+}

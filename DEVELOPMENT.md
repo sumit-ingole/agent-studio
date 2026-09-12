@@ -54,6 +54,37 @@ Shared packages in `packages/` are:
 
 ## Development Workflows
 
+### Full-Stack Local Modes
+
+The frontend uses same-origin Next.js proxy routes. FastAPI owns the model call, Supabase connection, and authentication secrets.
+
+```bash
+# A. Local UI with the deployed Vercel adio-base service.
+# Prompts for the adio-base URL and proxy secret without storing them.
+pnpm dev:ui:prod-api
+
+# B. Local UI and local FastAPI together.
+pnpm dev:local
+
+# C. FastAPI only.
+pnpm dev:backend
+```
+
+For local mode B, `apps/adio-base/.env` must contain local FastAPI settings and `apps/component-forge/.env.local` must point to `http://localhost:8000`. For mode A, the deployed adio-base Vercel project must have a matching `BACKEND_PROXY_SECRET`.
+
+### FastAPI Deployment
+
+FastAPI is deployed as the `adio-base` Vercel project. Its Python entrypoint is [apps/adio-base/api/index.py](apps/adio-base/api/index.py), and its configuration is [apps/adio-base/vercel.json](apps/adio-base/vercel.json). Set these Vercel variables on the `adio-base` project:
+
+- `FRONTEND_ORIGIN=https://adio-agents.vercel.app`
+- `FRONTEND_ORIGINS=https://adio-agents.vercel.app`
+- `BACKEND_PROXY_SECRET` to a long random value
+- `DATABASE_URL` to the Supabase session pooler URI
+- `GROQ_API_KEY` to the server-only Groq key
+- `SUPABASE_ANON_KEY` to the Supabase publishable key
+
+The Next.js Vercel project must set `BACKEND_API_URL` to the deployed `adio-base` URL and use the same `BACKEND_PROXY_SECRET`. The browser never receives these backend secrets. FastAPI rejects application requests without the proxy secret and rejects browser requests whose `Origin` is outside the configured frontend allowlist.
+
 ### Starting Development
 
 ```bash

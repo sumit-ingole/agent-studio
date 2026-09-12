@@ -3,6 +3,7 @@ import './globals.css';
 import { ReactQueryProvider } from './providers';
 import dynamic from 'next/dynamic';
 import Script from 'next/script';
+import AppNavigation from './components/AppNavigation';
 
 const ThemeToggle = dynamic(() => import('./components/ThemeToggle'), { ssr: false });
 
@@ -42,22 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <p className="text-xs text-muted">AI solutions for builders</p>
                   </div>
                 </div>
-                <nav className="hidden sm:flex items-center gap-6">
-                  <a href="/" className="nav-link font-medium">
-                    Home
-                  </a>
-                  <a href="/apps/component-forge" className="nav-link font-medium">
-                    Component Forge
-                  </a>
-                  <a
-                    href="https://github.com/sumit-ingole/agent-studio"
-                    className="nav-link font-medium"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    GitHub
-                  </a>
-                </nav>
+                <AppNavigation />
                 <div className="ml-4">
                   <ThemeToggle />
                 </div>

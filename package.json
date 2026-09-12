@@ -7,6 +7,9 @@
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
     "dev:component-forge": "pnpm --filter @agent-studio/component-forge dev",
+    "dev:ui:prod-api": "./scripts/dev-ui-prod-api.sh",
+    "dev:local": "./scripts/dev-local.sh",
+    "dev:backend": "./scripts/dev-backend.sh",
     "build": "pnpm -r build",
     "build:component-forge": "pnpm --filter @agent-studio/component-forge build",
     "start": "pnpm --filter @agent-studio/component-forge start",
