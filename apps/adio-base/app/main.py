@@ -1,4 +1,5 @@
 import os
+import logging
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,8 @@ from pydantic import ValidationError
 from .config import Settings, get_settings
 from .routes import auth_router, generate_router, profile_router
 
+logger = logging.getLogger(__name__)
+
 
 def require_proxy_secret(
     x_backend_proxy_secret: str | None = Header(default=None),
@@ -15,6 +18,8 @@ def require_proxy_secret(
     try:
         configured_secret = get_settings().backend_proxy_secret
     except ValidationError as exc:
+        fields = ", ".join(str(error.get("loc", ["unknown"])[0]) for error in exc.errors())
+        logger.error("Backend settings validation failed for: %s", fields)
         raise HTTPException(status_code=503, detail="Backend configuration is incomplete") from exc
     if not x_backend_proxy_secret or x_backend_proxy_secret != configured_secret:
         raise HTTPException(status_code=403, detail="Forbidden")
