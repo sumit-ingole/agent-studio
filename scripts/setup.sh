@@ -12,8 +12,8 @@ echo ""
 # Check Node.js version
 echo "✓ Checking Node.js version..."
 node_version=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$node_version" -lt 18 ]; then
-  echo "❌ Node.js 18+ required. Current: $(node -v)"
+if [ "$node_version" -lt 24 ]; then
+  echo "❌ Node.js 24+ required. Current: $(node -v)"
   exit 1
 fi
 echo "  Node.js version: $(node -v) ✓"
