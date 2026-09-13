@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "adio",
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "cleanUrls": true,
+  "trailingSlash": false
+}
