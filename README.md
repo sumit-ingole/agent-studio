@@ -95,7 +95,7 @@ agent-studio/
 
 ### Prerequisites
 
-- **Node.js**: 18.17 or higher
+- **Node.js**: 24 or higher
 - **pnpm**: 8.0 or higher
 - **Groq API Key**: [Get one free](https://console.groq.com)
 
