@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": "../..",
     "paths": {
-      "@agent-studio/types": ["packages/types/dist"]
+      "@agent-studio/types": ["packages/types/dist/index.d.ts"]
     },
     "outDir": "./dist",
     "rootDir": "./src",
