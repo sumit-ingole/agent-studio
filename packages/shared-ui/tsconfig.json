@@ -1,6 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "paths": {
+      "@agent-studio/types": ["packages/types/dist"]
+    },
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
@@ -10,5 +13,6 @@
     "noEmit": false
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
+  "references": [{ "path": "../types" }]
 }
