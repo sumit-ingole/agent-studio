@@ -9,7 +9,7 @@ Get AgentStudio running in 5 minutes!
 Verify you have these installed:
 
 ```bash
-node --version    # Should be 18.17 or higher
+node --version    # Should be 24 or higher
 npm --version     # Any recent version is fine
 ```
 
