@@ -52,15 +52,14 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_ADIO_BASE_PROJECT_ID: ${{ secrets.VERCEL_ADIO_BASE_PROJECT_ID }}
-        working-directory: apps/adio-base
         run: |
           if [ -z "${VERCEL_ADIO_BASE_PROJECT_ID}" ]; then
             echo "ERROR: VERCEL_ADIO_BASE_PROJECT_ID is not configured."
             exit 1
           fi
 
-          vercel build --prod --yes --non-interactive --token "$VERCEL_TOKEN" --project "$VERCEL_ADIO_BASE_PROJECT_ID" --scope "$VERCEL_ORG_ID" --local-config vercel.json
-          vercel deploy --prod --confirm --yes --non-interactive --token "$VERCEL_TOKEN" --project "$VERCEL_ADIO_BASE_PROJECT_ID" --scope "$VERCEL_ORG_ID" --local-config vercel.json
+          vercel build --prod --yes --non-interactive --token "$VERCEL_TOKEN" --project "$VERCEL_ADIO_BASE_PROJECT_ID" --scope "$VERCEL_ORG_ID" --local-config apps/adio-base/vercel.json
+          vercel deploy --prod --confirm --yes --non-interactive --token "$VERCEL_TOKEN" --project "$VERCEL_ADIO_BASE_PROJECT_ID" --scope "$VERCEL_ORG_ID" --local-config apps/adio-base/vercel.json
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
