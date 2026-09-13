@@ -32,6 +32,7 @@ app.include_router(auth_router, dependencies=[Depends(require_proxy_secret)])
 app.include_router(generate_router, dependencies=[Depends(require_proxy_secret)])
 app.include_router(profile_router, dependencies=[Depends(require_proxy_secret)])
 
+
 @app.middleware("http")
 async def origin_guard(request: Request, call_next):
     origin = request.headers.get("origin")
