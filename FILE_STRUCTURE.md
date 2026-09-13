@@ -89,7 +89,7 @@ agent-studio/                          ← Root directory
 ### Prerequisites
 
 ```bash
-# Check Node.js version (should be 18.17+)
+# Check Node.js version (should be 24+)
 node --version
 ```
 
