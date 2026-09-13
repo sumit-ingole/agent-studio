@@ -27,7 +27,11 @@ allowed_origins = [
     ).split(",")
     if origin.strip()
 ]
-app = FastAPI(title="Agent Studio API", version="1.0.0", docs_url=None if settings.app_env == "production" else "/docs")
+app = FastAPI(
+    title="Agent Studio API",
+    version="1.0.0",
+    docs_url=None if os.getenv("APP_ENV", "development") == "production" else "/docs",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,

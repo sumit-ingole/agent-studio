@@ -8,16 +8,16 @@ export async function proxyToBackend(path: string, request: Request): Promise<Re
     return Response.json({ error: 'Backend is not configured', status: 503 }, { status: 503 });
   }
 
-  const incomingHeaders = headers();
-  const forwardedHeaders = new Headers();
-  const contentType = incomingHeaders.get('content-type');
-  const cookie = incomingHeaders.get('cookie');
-  if (contentType) forwardedHeaders.set('content-type', contentType);
-  if (cookie) forwardedHeaders.set('cookie', cookie);
-  forwardedHeaders.set('x-backend-proxy-secret', proxySecret);
-
   let response: Response;
   try {
+    const incomingHeaders = await headers();
+    const forwardedHeaders = new Headers();
+    const contentType = incomingHeaders.get('content-type');
+    const cookie = incomingHeaders.get('cookie');
+    if (contentType) forwardedHeaders.set('content-type', contentType);
+    if (cookie) forwardedHeaders.set('cookie', cookie);
+    forwardedHeaders.set('x-backend-proxy-secret', proxySecret);
+
     response = await fetch(`${backendUrl.replace(/\/$/, '')}${path}`, {
       method: request.method,
       headers: forwardedHeaders,
@@ -28,7 +28,8 @@ export async function proxyToBackend(path: string, request: Request): Promise<Re
       cache: 'no-store',
       redirect: 'manual',
     });
-  } catch {
+  } catch (error) {
+    console.error('Backend proxy request failed', error);
     return Response.json({ error: 'Backend unavailable', status: 502 }, { status: 502 });
   }
 
