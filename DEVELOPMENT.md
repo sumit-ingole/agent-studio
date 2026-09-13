@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- Node.js 18.17+
+- Node.js 24+
 - pnpm 8.0+
 - Git
 - (Optional) Docker for containerized development
