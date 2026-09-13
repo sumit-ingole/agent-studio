@@ -1,6 +1,9 @@
+import os
+
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from .config import Settings, get_settings
 from .routes import auth_router, generate_router, profile_router
@@ -8,16 +11,20 @@ from .routes import auth_router, generate_router, profile_router
 
 def require_proxy_secret(
     x_backend_proxy_secret: str | None = Header(default=None),
-    settings: Settings = Depends(get_settings),
 ) -> None:
-    if not x_backend_proxy_secret or x_backend_proxy_secret != settings.backend_proxy_secret:
+    try:
+        configured_secret = get_settings().backend_proxy_secret
+    except ValidationError as exc:
+        raise HTTPException(status_code=503, detail="Backend configuration is incomplete") from exc
+    if not x_backend_proxy_secret or x_backend_proxy_secret != configured_secret:
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
-settings = get_settings()
 allowed_origins = [
     origin.strip().rstrip("/")
-    for origin in (settings.frontend_origins or str(settings.frontend_origin)).split(",")
+    for origin in (
+        os.getenv("FRONTEND_ORIGINS") or os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
+    ).split(",")
     if origin.strip()
 ]
 app = FastAPI(title="Agent Studio API", version="1.0.0", docs_url=None if settings.app_env == "production" else "/docs")
