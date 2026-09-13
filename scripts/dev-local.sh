@@ -3,9 +3,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 service_dir="$PWD/apps/adio-base"
-uvicorn_bin="$service_dir/.venv/bin/uvicorn"
-
-if [[ ! -x "$uvicorn_bin" ]]; then
+python_bin="$service_dir/.venv/bin/python"
+if [[ ! -x "$python_bin" ]]; then
   print -u2 "Backend virtual environment is missing. Run: python3 -m venv apps/adio-base/.venv && apps/adio-base/.venv/bin/pip install -r apps/adio-base/requirements.txt"
   exit 1
 fi
@@ -15,7 +14,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-env -u DATABASE_URL "$uvicorn_bin" --env-file "$service_dir/.env" --app-dir "$service_dir" app.main:app --host 127.0.0.1 --port 8000 &
+env -u DATABASE_URL "$python_bin" -m uvicorn --env-file "$service_dir/.env" --app-dir "$service_dir" app.main:app --host 127.0.0.1 --port 8000 &
 backend_pid=$!
 
 pnpm --filter @agent-studio/component-forge dev
