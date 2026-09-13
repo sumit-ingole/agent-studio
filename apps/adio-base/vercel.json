@@ -1,10 +1,4 @@
 {
   "version": 2,
-  "name": "adio-base",
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/index.py"
-    }
-  ]
+  "name": "adio-base"
 }
