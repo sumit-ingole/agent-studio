@@ -29,7 +29,7 @@ The older `SETUP_AND_RUN_GUIDE.md` still contains instructions for the previous 
 Install or verify:
 
 ```bash
-node --version       # Node 18.17 or newer
+node --version       # Node 24 or newer
 pnpm --version       # pnpm 8.x
 python3 --version    # Python 3.12 recommended
 ```
