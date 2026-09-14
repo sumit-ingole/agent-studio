@@ -24,6 +24,11 @@ export default function ProfilePage() {
       .catch((reason: Error) => setError(reason.message));
   }, []);
 
+  async function handleSignout() {
+    await fetch('/api/auth/signout', { method: 'POST' });
+    window.location.href = '/';
+  }
+
   if (error)
     return (
       <main className="mx-auto max-w-xl px-5 py-20 text-center">
@@ -46,7 +51,12 @@ export default function ProfilePage() {
       <main className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
         <p className="eyebrow">Account</p>
         <h1 className="mt-4 text-5xl text-strong">{profile.user.fullName || profile.user.email}</h1>
-        <p className="mt-3 text-muted">{profile.user.email}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-4">
+          <p className="text-muted">{profile.user.email}</p>
+          <button type="button" onClick={handleSignout} className="nav-link text-sm font-medium">
+            Sign out
+          </button>
+        </div>
         <section className="mt-10 grid gap-5 sm:grid-cols-2">
           <div className="card border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
             <p className="text-sm text-muted">Generations, rolling 24 hours</p>
