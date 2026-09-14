@@ -1,11 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ReactQueryProvider } from './providers';
-import dynamic from 'next/dynamic';
 import Script from 'next/script';
 import AppNavigation from './components/AppNavigation';
-
-const ThemeToggle = dynamic(() => import('./components/ThemeToggle'), { ssr: false });
 
 export const metadata: Metadata = {
   title: 'Adio | AI solutions for builders',
@@ -31,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Navigation Header */}
           <header className="sticky top-0 z-50 header-bg border-b panel-border shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
+              <div className="flex items-center gap-6 h-16">
                 <div className="flex items-center gap-3">
                   <div
                     className="text-2xl font-extrabold tracking-tight text-primary"
@@ -44,9 +41,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </div>
                 </div>
                 <AppNavigation />
-                <div className="ml-4">
-                  <ThemeToggle />
-                </div>
               </div>
             </div>
           </header>
