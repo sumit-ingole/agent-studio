@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { LogIn, UserCircle } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 export default function AppNavigation() {
   const [signedIn, setSignedIn] = useState(false);
-  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -16,9 +16,6 @@ export default function AppNavigation() {
       })
       .catch(() => {
         if (active) setSignedIn(false);
-      })
-      .finally(() => {
-        if (active) setChecking(false);
       });
     return () => {
       active = false;
@@ -30,13 +27,8 @@ export default function AppNavigation() {
       ? '/auth'
       : `/auth?returnTo=${encodeURIComponent(window.location.pathname)}`;
 
-  async function handleSignout() {
-    await fetch('/api/auth/signout', { method: 'POST' });
-    window.location.href = '/';
-  }
-
   return (
-    <>
+    <div className="flex min-w-0 flex-1 items-center justify-between">
       <nav className="hidden items-center gap-6 sm:flex">
         <Link href="/" className="nav-link font-medium">
           Home
@@ -53,32 +45,23 @@ export default function AppNavigation() {
           GitHub
         </a>
       </nav>
-      <div className="ml-4 flex items-center gap-3">
-        {!checking &&
-          (signedIn ? (
-            <>
-              <Link
-                href="/profile"
-                aria-label="Open profile"
-                title="Profile"
-                className="text-strong transition hover:text-[var(--color-accent)]"
-              >
-                <UserCircle size={24} strokeWidth={1.8} />
-              </Link>
-              <button
-                type="button"
-                onClick={handleSignout}
-                className="nav-link text-sm font-medium"
-              >
-                Sign out
-              </button>
-            </>
-          ) : (
-            <Link href={authHref} className="btn-secondary gap-2 px-4 py-2 text-sm">
-              <LogIn size={16} /> Sign in
-            </Link>
-          ))}
+      <div className="ml-auto flex items-center gap-3">
+        <ThemeToggle />
+        {signedIn ? (
+          <Link
+            href="/profile"
+            aria-label="Open profile"
+            title="Profile"
+            className="text-strong transition hover:text-[var(--color-accent)]"
+          >
+            <UserCircle size={24} strokeWidth={1.8} />
+          </Link>
+        ) : (
+          <Link href={authHref} className="btn-secondary gap-2 px-4 py-2 text-sm">
+            <LogIn size={16} /> Sign in
+          </Link>
+        )}
       </div>
-    </>
+    </div>
   );
 }
