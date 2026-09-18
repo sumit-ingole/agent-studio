@@ -1,7 +1,10 @@
+import logging
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger("adio-base")
 
 
 class Settings(BaseSettings):
@@ -24,6 +27,18 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
+def format_settings_errors(exc: ValidationError) -> str:
+    parts = []
+    for error in exc.errors():
+        field = ".".join(str(part) for part in error.get("loc", ()) ) or "unknown"
+        parts.append(f"{field} ({error.get('type')}: {error.get('msg')})")
+    return "; ".join(parts)
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    try:
+        return Settings()
+    except ValidationError as exc:
+        logger.error("Backend settings validation failed for: %s", format_settings_errors(exc))
+        raise
