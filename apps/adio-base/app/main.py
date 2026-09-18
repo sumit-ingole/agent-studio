@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from .config import Settings, format_settings_errors, get_settings
+from .config import format_settings_errors, get_settings
 from .routes import auth_router, generate_router, profile_router
 
 logging.basicConfig(
